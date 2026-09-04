@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -52,6 +53,7 @@ fun PlaybackError(
     retry: () -> Unit,
 ) {
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     val playerConnection = LocalPlayerConnection.current ?: return
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
     val streamClient by playerConnection.currentStreamClient.collectAsState()
@@ -196,7 +198,7 @@ fun PlaybackError(
             OutlinedButton(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Metrolist Playback Error", errorReport))
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Ndichan Music Playback Error", errorReport))
                 },
                 shape = RoundedCornerShape(20.dp),
             ) {
@@ -207,6 +209,23 @@ fun PlaybackError(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(text = stringResource(R.string.copy))
+            }
+
+            OutlinedButton(
+                onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Ndichan Music Playback Error", errorReport))
+                    uriHandler.openUri("https://github.com/andikachan/Metrolist/issues/new")
+                },
+                shape = RoundedCornerShape(20.dp),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.bug_report),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Report")
             }
         }
     }
@@ -229,7 +248,7 @@ private fun buildPlaybackErrorReport(
     streamClient: String?,
 ): String =
     buildString {
-        appendLine("Metrolist Playback Error Report")
+        appendLine("Ndichan Music Playback Error Report")
         appendLine("================================")
         appendLine("Time: ${Instant.ofEpochMilli(error.timestampMs)}")
         appendLine("App version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")

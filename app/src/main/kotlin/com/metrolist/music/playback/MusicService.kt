@@ -3062,7 +3062,7 @@ class MusicService :
             }
         }
 
-        if (dataStore.get(AutoSkipNextOnErrorKey, false)) {
+        if (dataStore.get(AutoSkipNextOnErrorKey, true)) {
             Timber.tag(TAG).d("Auto-skipping to next track due to unrecoverable error")
             skipOnError()
         } else {
@@ -3403,7 +3403,7 @@ class MusicService :
      * Handles final failure when all recovery attempts have been exhausted.
      */
     private fun handleFinalFailure() {
-        val autoSkipOnError = dataStore.get(AutoSkipNextOnErrorKey, false)
+        val autoSkipOnError = dataStore.get(AutoSkipNextOnErrorKey, true)
         val autoplay = dataStore.get(AutoplayKey, true)
         val canAdvance = player.hasNextMediaItem()
 
