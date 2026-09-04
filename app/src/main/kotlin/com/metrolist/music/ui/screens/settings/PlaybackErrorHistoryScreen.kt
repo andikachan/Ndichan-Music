@@ -68,6 +68,7 @@ import com.metrolist.music.LocalPlayerAwareWindowInsets
 import com.metrolist.music.R
 import com.metrolist.music.playback.PlaybackErrorHistory
 import com.metrolist.music.playback.PlaybackErrorItem
+import com.metrolist.music.ui.utils.backToMain
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -93,6 +94,7 @@ fun PlaybackErrorHistoryScreen(
             navigationIcon = {
                 com.metrolist.music.ui.component.IconButton(
                     onClick = navController::navigateUp,
+                    onLongClick = navController::backToMain,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.arrow_back),
