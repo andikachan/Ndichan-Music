@@ -103,11 +103,11 @@ private data class CommunityLink(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val leadDeveloper = Contributor(
-    name = "Mo Agamy",
+    name = "ndichan",
     roleRes = R.string.credits_lead_developer,
-    githubHandle = "mostafaalagamy",
+    githubHandle = "andikachan",
     polygon = MaterialShapes.Cookie9Sided,
-    favoriteSongVideoId = "Mh2JWGWvy_Y"
+    favoriteSongVideoId = "DWJh0Dny5Ug"
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -117,10 +117,8 @@ private val collaborators = listOf(
 )
 
 private val communityLinks = listOf(
-    CommunityLink(R.string.credits_discord, R.drawable.discord, "https://discord.com/invite/zrdbeRG2Mt"),
-    CommunityLink(R.string.credits_telegram, R.drawable.telegram, "https://t.me/metrolistapp"),
-    CommunityLink(R.string.credits_view_repo, R.drawable.github, "https://github.com/MetrolistGroup/Metrolist"),
-    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/MetrolistGroup/Metrolist/blob/main/LICENSE")
+    CommunityLink(R.string.credits_view_repo, R.drawable.github, "https://github.com/andikachan/Metrolist"),
+    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/andikachan/Metrolist/blob/main/LICENSE")
 )
 
 private fun handleEasterEggClick(
@@ -265,12 +263,8 @@ fun AboutScreen(
                 Spacer(Modifier.width(20.dp))
         
                 Column {
-                    val metrolistName = stringResource(R.string.metrolist)
-                        .lowercase(Locale.getDefault())
-                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-
                     Text(
-                        text = metrolistName,
+                        text = "Ndichan Music",
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -280,8 +274,22 @@ fun AboutScreen(
                     Spacer(Modifier.height(8.dp))
             
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.by_ndichan),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)

@@ -287,9 +287,9 @@ private fun NewMiniPlayer(
 
     // Memoize colors
     val backgroundColor = when (miniPlayerBackground) {
-        MiniPlayerBackgroundStyle.DEFAULT    -> MaterialTheme.colorScheme.surfaceContainer
+        MiniPlayerBackgroundStyle.DEFAULT    -> if (useDarkTheme) Color(0xF01C1C1E) else Color(0xF2F2F2F7)
         MiniPlayerBackgroundStyle.TRANSPARENT -> Color.Black.copy(alpha = 0.25f)
-        MiniPlayerBackgroundStyle.BLUR       -> MaterialTheme.colorScheme.surfaceContainer
+        MiniPlayerBackgroundStyle.BLUR       -> if (useDarkTheme) Color(0xF01C1C1E) else Color(0xF2F2F2F7)
         MiniPlayerBackgroundStyle.GRADIENT   -> MaterialTheme.colorScheme.surfaceContainer
         MiniPlayerBackgroundStyle.PURE_BLACK -> Color.Black
     }
@@ -379,9 +379,13 @@ private fun NewMiniPlayer(
                     .then(if (isTabletLandscape) Modifier.width(500.dp).align(Alignment.Center) else Modifier.fillMaxWidth())
                     .height(64.dp)
                     .offset { IntOffset(offsetXAnimatable.value.roundToInt(), 0) }
-                    .clip(RoundedCornerShape(32.dp))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(color = backgroundColor)
-                    .border(1.dp, outlineColor.copy(alpha = 0.3f), RoundedCornerShape(32.dp))
+                    .border(
+                        0.75.dp,
+                        if (useDarkTheme) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
+                        RoundedCornerShape(20.dp),
+                    )
                     .clickable(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
@@ -486,7 +490,36 @@ private fun NewMiniPlayer(
                     onSurfaceColor = onSurfaceColor,
                 )
                 }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                IconButton(
+                    enabled = canSkipNext && !isListenTogetherGuest,
+                    onClick = if (isListenTogetherGuest) ({}) else ({ playerConnection.seekToNext() }),
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.skip_next),
+                        contentDescription = null,
+                        tint = onSurfaceColor,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
             }
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(2.5.dp)
+                        .align(Alignment.BottomCenter)
+                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+                        .drawWithContent {
+                            val progress = progressState.progress
+                            drawRect(outlineColor.copy(alpha = 0.15f))
+                            drawRect(primaryColor, size = Size(size.width * progress, size.height))
+                        },
+            )
         }
     }
 }
@@ -558,9 +591,9 @@ private fun NewMiniPlayerPlayButton(
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, outlineColor.copy(alpha = 0.3f), CircleShape)
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(0.5.dp, outlineColor.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
                     .clickable {
                         if (isListenTogetherGuest) {
                             playerConnection.toggleMute()
@@ -585,7 +618,7 @@ private fun NewMiniPlayerPlayButton(
                     model = thumbnailUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
                 )
             }
 
@@ -597,7 +630,7 @@ private fun NewMiniPlayerPlayButton(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.4f), CircleShape),
+                            .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
                 )
                 Icon(
                     painter =
@@ -640,7 +673,8 @@ private fun NewMiniPlayerSongInfo(
                 text = metadata.title,
                 color = onSurfaceColor,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.2).sp,
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
                 modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
@@ -655,6 +689,7 @@ private fun NewMiniPlayerSongInfo(
                          text = metadata.artists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name },
                          color = onSurfaceColor.copy(alpha = 0.7f),
                         fontSize = 12.sp,
+                        letterSpacing = (-0.1).sp,
                         maxLines = 1,
                         overflow = TextOverflow.Clip,
                         modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
