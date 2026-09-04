@@ -98,8 +98,8 @@ object Updater {
             
             // Parse architecture and variant from filename
             val (arch, variant) = when {
-                name == "Metrolist.apk" -> "universal" to "foss"
-                name == "Metrolist-with-Google-Cast.apk" -> "universal" to "gms"
+                name == "Metrolist.apk" || name == "Ndichan-Music.apk" || name == "Ndichan-Music-iOS-Edition.apk" -> "universal" to "foss"
+                name == "Metrolist-with-Google-Cast.apk" || name == "Ndichan-Music-with-Google-Cast.apk" -> "universal" to "gms"
                 name.startsWith("app-") && name.endsWith("-release.apk") -> {
                     val arch = name.removePrefix("app-").removeSuffix("-release.apk")
                     arch to "foss"
@@ -108,6 +108,7 @@ object Updater {
                     val arch = name.removePrefix("app-").removeSuffix("-with-Google-Cast.apk")
                     arch to "gms"
                 }
+                name.endsWith(".apk") -> "universal" to "foss"
                 else -> null to null
             }
             
@@ -122,24 +123,28 @@ object Updater {
     /**
      * Fetch latest release from GitHub API
      */
-    suspend fun getLatestRelease(forceRefresh: Boolean = false): Result<ReleaseInfo> =
+    suspend fun getLatestRelease(forceRefresh: Boolean = false): Result<ReleaseInfo?> =
         withContext(Dispatchers.IO) {
             runCatching {
                 // Return cached if available and not forcing refresh
                 if (cachedReleaseInfo != null && !forceRefresh) {
-                    return@runCatching cachedReleaseInfo!!
+                    return@runCatching cachedReleaseInfo
                 }
                 
                 val response = client.get("$GITHUB_API_BASE/releases/latest")
                     .bodyAsText()
+                if (response.isBlank()) return@runCatching null
                 val json = JSONObject(response)
+                if (!json.has("tag_name")) {
+                    return@runCatching null
+                }
                 
                 val releaseInfo = ReleaseInfo(
                     tagName = json.getString("tag_name"),
-                    versionName = json.getString("name"),
-                    description = json.getString("body"),
-                    releaseDate = json.getString("published_at"),
-                    assets = parseAssets(json.getJSONArray("assets"))
+                    versionName = json.optString("name").takeIf { it.isNotBlank() } ?: json.getString("tag_name"),
+                    description = json.optString("body", ""),
+                    releaseDate = json.optString("published_at", ""),
+                    assets = parseAssets(json.optJSONArray("assets") ?: JSONArray())
                 )
                 
                 cachedReleaseInfo = releaseInfo
@@ -165,6 +170,10 @@ object Updater {
                 while (hasMore && page <= 10) { // Limit to 10 pages
                     val response = client.get("$GITHUB_API_BASE/releases?page=$page&per_page=30")
                         .bodyAsText()
+                    if (response.isBlank() || response.startsWith("{")) {
+                        hasMore = false
+                        break
+                    }
                     val json = JSONArray(response)
                     
                     if (json.length() == 0) {
@@ -174,12 +183,13 @@ object Updater {
                     
                     for (i in 0 until json.length()) {
                         val releaseObj = json.getJSONObject(i)
+                        if (!releaseObj.has("tag_name")) continue
                         releases.add(ReleaseInfo(
                             tagName = releaseObj.getString("tag_name"),
-                            versionName = releaseObj.getString("name"),
-                            description = releaseObj.getString("body"),
-                            releaseDate = releaseObj.getString("published_at"),
-                            assets = parseAssets(releaseObj.getJSONArray("assets"))
+                            versionName = releaseObj.optString("name").takeIf { it.isNotBlank() } ?: releaseObj.getString("tag_name"),
+                            description = releaseObj.optString("body", ""),
+                            releaseDate = releaseObj.optString("published_at", ""),
+                            assets = parseAssets(releaseObj.optJSONArray("assets") ?: JSONArray())
                         ))
                     }
                     
@@ -225,17 +235,21 @@ object Updater {
                         BuildConfig.BASE_VERSION_NAME,
                         cachedReleaseInfo!!.versionName
                     )
-                    return@runCatching cachedReleaseInfo!! to hasUpdate
+                    return@runCatching cachedReleaseInfo to hasUpdate
                 }
                 
                 val result = getLatestRelease(forceRefresh = true)
                 if (result.isSuccess) {
                     val releaseInfo = result.getOrThrow()
-                    val hasUpdate = isUpdateAvailable(
-                        BuildConfig.BASE_VERSION_NAME,
-                        releaseInfo.versionName
-                    )
-                    releaseInfo to hasUpdate
+                    if (releaseInfo != null) {
+                        val hasUpdate = isUpdateAvailable(
+                            BuildConfig.BASE_VERSION_NAME,
+                            releaseInfo.versionName
+                        )
+                        releaseInfo to hasUpdate
+                    } else {
+                        null to false
+                    }
                 } else {
                     throw result.exceptionOrNull() ?: Exception("Unknown error")
                 }

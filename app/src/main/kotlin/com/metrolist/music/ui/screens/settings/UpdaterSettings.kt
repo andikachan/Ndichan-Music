@@ -82,6 +82,9 @@ fun UpdaterScreen(
                             latestVersion = releaseInfo.versionName
                             updateAvailable = hasUpdate
                             changelogContent = releaseInfo.description
+                        } else {
+                            latestVersion = BuildConfig.VERSION_NAME
+                            updateAvailable = false
                         }
                     }.onFailure {
                         checkError = String.format(failedToCheckUpdatesTemplate, it.message ?: "Unknown error")
