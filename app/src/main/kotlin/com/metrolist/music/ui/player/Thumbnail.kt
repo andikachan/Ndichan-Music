@@ -6,6 +6,9 @@
 package com.metrolist.music.ui.player
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -507,6 +510,17 @@ private fun ThumbnailItem(
     var skipMultiplier by remember { mutableIntStateOf(1) }
     var lastTapTime by remember { mutableLongStateOf(0L) }
 
+    val isPlaying by playerConnection.isPlaying.collectAsStateWithLifecycle()
+    val isCurrentItem = item.mediaId == currentMediaId
+    val iosArtworkScale by animateFloatAsState(
+        targetValue = if (isPlaying && isCurrentItem) 1.0f else 0.88f,
+        animationSpec = spring(
+            dampingRatio = 0.75f,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "iosArtworkScale"
+    )
+
     Box(
         modifier = modifier
             .then(
@@ -559,6 +573,12 @@ private fun ThumbnailItem(
         Box(
             modifier = Modifier
                 .size(dimensions.thumbnailSize)
+                .graphicsLayer {
+                    scaleX = iosArtworkScale
+                    scaleY = iosArtworkScale
+                    shape = RoundedCornerShape(dimensions.cornerRadius)
+                    clip = true
+                }
                 .clip(RoundedCornerShape(dimensions.cornerRadius))
         ) {
             if (hidePlayerThumbnail) {

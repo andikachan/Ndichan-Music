@@ -1124,23 +1124,9 @@ fun BottomSheetPlayer(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 if (useNewPlayerDesign) {
-                    val shareShape =
-                        RoundedCornerShape(
-                            topStart = 50.dp,
-                            bottomStart = 50.dp,
-                            topEnd = 3.dp,
-                            bottomEnd = 3.dp,
-                        )
-
-                    val favShape =
-                        RoundedCornerShape(
-                            topStart = 3.dp,
-                            bottomStart = 3.dp,
-                            topEnd = 50.dp,
-                            bottomEnd = 50.dp,
-                        )
-
-                    val middleShape = RoundedCornerShape(3.dp)
+                    val shareShape = androidx.compose.foundation.shape.CircleShape
+                    val favShape = androidx.compose.foundation.shape.CircleShape
+                    val middleShape = androidx.compose.foundation.shape.CircleShape
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -1921,6 +1907,14 @@ fun BottomSheetPlayer(
                             .padding(bottom = bottomPadding)
                             .animateContentSize(),
                 ) {
+                    // iOS Sheet Drag Handle Grabber
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 10.dp, bottom = 4.dp)
+                            .size(width = 36.dp, height = 5.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                    )
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier.weight(1f),

@@ -146,26 +146,14 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
-    val useNewMiniPlayerDesign by rememberPreference(UseNewMiniPlayerDesignKey, true)
-
     // Create stable progress state - doesn't cause recomposition on position changes
     val progressState = remember { ProgressState(positionState, durationState) }
 
-    if (useNewMiniPlayerDesign) {
-        NewMiniPlayer(
-            progressState = progressState,
-            modifier = modifier,
-            onClick = onClick,
-        )
-    } else {
-        Box(modifier = modifier.fillMaxWidth()) {
-            LegacyMiniPlayer(
-                progressState = progressState,
-                modifier = Modifier.align(Alignment.Center),
-                onClick = onClick,
-            )
-        }
-    }
+    NewMiniPlayer(
+        progressState = progressState,
+        modifier = modifier,
+        onClick = onClick,
+    )
 }
 
 // ============================================================================
@@ -431,24 +419,31 @@ private fun NewMiniPlayer(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
             ) {
-                // Play button with progress - isolated composable
-                NewMiniPlayerPlayButton(
-                    progressState = progressState,
-                    playbackState = playbackState,
-                    isCasting = isCasting,
-                    castHandler = castHandler,
-                    playerConnection = playerConnection,
-                    mediaMetadata = mediaMetadata,
-                    primaryColor = primaryColor,
-                    outlineColor = outlineColor,
-                    listenTogetherManager = listenTogetherManager,
-                )
+                // 1. iOS Pure Album Art (squircle, clean, no play icon overlay)
+                mediaMetadata?.let { metadata ->
+                    val thumbnailUrl = remember(metadata.thumbnailUrl) {
+                        metadata.thumbnailUrl?.resize(144, 144)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(0.5.dp, outlineColor.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                    ) {
+                        AsyncImage(
+                            model = thumbnailUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // Song info - isolated composable
+                // 2. Song info (bold title & artist)
                 NewMiniPlayerSongInfo(
                     mediaMetadata = mediaMetadata,
                     onSurfaceColor = onSurfaceColor,
@@ -456,7 +451,7 @@ private fun NewMiniPlayer(
                     modifier = Modifier.weight(1f),
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Cast indicator
                 if (isCasting) {
@@ -466,43 +461,58 @@ private fun NewMiniPlayer(
                         tint = primaryColor,
                         modifier = Modifier.size(20.dp),
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
 
-// Subscribe button - isolated composable
-                mediaMetadata?.artists?.firstOrNull()?.id?.let { artistId ->
-                    SubscribeButton(
-                        artistId = artistId,
-                        metadata = mediaMetadata!!,
-                        primaryColor = primaryColor,
-                        outlineColor = outlineColor,
-                        onSurfaceColor = onSurfaceColor,
+                // 3. Play / Pause Button (Clean iOS icon)
+                IconButton(
+                    onClick = {
+                        if (isListenTogetherGuest) {
+                            playerConnection.toggleMute()
+                            return@IconButton
+                        }
+                        if (isCasting) {
+                            if (castIsPlaying) castHandler?.pause() else castHandler?.play()
+                        } else if (playbackState == Player.STATE_ENDED) {
+                            playerConnection.player.seekTo(0, 0)
+                            playerConnection.player.playWhenReady = true
+                        } else {
+                            playerConnection.togglePlayPause()
+                        }
+                    },
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isListenTogetherGuest) {
+                                if (isMuted) R.drawable.volume_off else R.drawable.volume_up
+                            } else if (playbackState == Player.STATE_ENDED) {
+                                R.drawable.replay
+                            } else if (effectiveIsPlaying) {
+                                R.drawable.pause
+                            } else {
+                                R.drawable.play
+                            }
+                        ),
+                        contentDescription = null,
+                        tint = onSurfaceColor,
+                        modifier = Modifier.size(26.dp),
                     )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-// Favorite button - isolated composable
-                mediaMetadata?.let { FavoriteButton(
-                    songId = it.id,
-                    errorColor = errorColor,
-                    outlineColor = outlineColor,
-                    onSurfaceColor = onSurfaceColor,
-                )
                 }
 
                 Spacer(modifier = Modifier.width(4.dp))
 
+                // 4. Skip Next Button (Clean iOS icon)
                 IconButton(
                     enabled = canSkipNext && !isListenTogetherGuest,
                     onClick = if (isListenTogetherGuest) ({}) else ({ playerConnection.seekToNext() }),
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.skip_next),
                         contentDescription = null,
-                        tint = onSurfaceColor,
-                        modifier = Modifier.size(22.dp),
+                        tint = onSurfaceColor.copy(alpha = if (canSkipNext && !isListenTogetherGuest) 1f else 0.4f),
+                        modifier = Modifier.size(26.dp),
                     )
                 }
             }
@@ -672,9 +682,9 @@ private fun NewMiniPlayerSongInfo(
             Text(
                 text = metadata.title,
                 color = onSurfaceColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = (-0.2).sp,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.3).sp,
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
                 modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
@@ -687,9 +697,10 @@ private fun NewMiniPlayerSongInfo(
                  if (metadata.artists.any { it.name.isNotBlank() }) {
                      Text(
                          text = metadata.artists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name },
-                         color = onSurfaceColor.copy(alpha = 0.7f),
-                        fontSize = 12.sp,
-                        letterSpacing = (-0.1).sp,
+                         color = onSurfaceColor.copy(alpha = 0.65f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        letterSpacing = (-0.2).sp,
                         maxLines = 1,
                         overflow = TextOverflow.Clip,
                         modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),

@@ -43,6 +43,8 @@ jobs:
         run: ./gradlew --console=plain assembleFossDebug --warning-mode summary -x lint
         env:
           METROLIST_DEBUG_KEYSTORE_PATH: pr-debug.keystore
+          METROLIST_APPLICATION_ID: com.ndichan.music
+          METROLIST_APP_NAME: Ndichan Music
           PULL_REQUEST: "true"
 
       - name: Upload Debug APK

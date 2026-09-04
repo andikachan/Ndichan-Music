@@ -7,7 +7,7 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
-val baseApplicationId = "com.metrolist.music"
+val baseApplicationId = "com.ndichan.music"
 val applicationIdOverride = System.getenv("METROLIST_APPLICATION_ID")?.takeIf { it.isNotBlank() }
 val appNameOverride = System.getenv("METROLIST_APP_NAME")?.takeIf { it.isNotBlank() }
 val buildCommit =
@@ -128,12 +128,9 @@ android {
             )
         }
         debug {
-            if (applicationIdOverride == null) {
-                applicationIdSuffix = ".debug"
-            }
             isDebuggable = true
             if (appNameOverride == null) {
-                resValue("string", "app_name", "Ndichan Music Debug")
+                resValue("string", "app_name", "Ndichan Music")
             }
             signingConfig =
                 if (workflowDebugKeystoreFile != null) {
