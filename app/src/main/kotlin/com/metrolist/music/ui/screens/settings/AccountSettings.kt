@@ -207,16 +207,29 @@ fun AccountSettings(
                     var accountEmailValue = ""
                     var accountChannelHandleValue = ""
 
-                    data.split("\n").forEach {
+                    data.split("\n").map { it.trim() }.filter { it.isNotEmpty() }.forEach { line ->
                         when {
-                            it.startsWith("***INNERTUBE COOKIE*** =") -> cookie = it.substringAfter("=")
-                            it.startsWith("***VISITOR DATA*** =") -> visitorDataValue = it.substringAfter("=")
-                            it.startsWith("***DATASYNC ID*** =") -> dataSyncIdValue = it.substringAfter("=")
-                            it.startsWith("***AUTH USER*** =") -> authUserValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT NAME*** =") -> accountNameValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT EMAIL*** =") -> accountEmailValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT CHANNEL HANDLE*** =") -> accountChannelHandleValue = it.substringAfter("=")
+                            line.startsWith("***INNERTUBE COOKIE*** =") -> cookie = line.substringAfter("=").trim()
+                            line.startsWith("cookie=", ignoreCase = true) -> cookie = line.substringAfter("=").trim()
+                            line.startsWith("***VISITOR DATA*** =") -> visitorDataValue = line.substringAfter("=").trim()
+                            line.startsWith("visitor_data=", ignoreCase = true) -> visitorDataValue = line.substringAfter("=").trim()
+                            line.startsWith("***DATASYNC ID*** =") -> dataSyncIdValue = line.substringAfter("=").trim()
+                            line.startsWith("data_sync_id=", ignoreCase = true) -> dataSyncIdValue = line.substringAfter("=").trim()
+                            line.startsWith("***AUTH USER*** =") -> authUserValue = line.substringAfter("=").trim()
+                            line.startsWith("auth_user=", ignoreCase = true) -> authUserValue = line.substringAfter("=").trim()
+                            line.startsWith("***ACCOUNT NAME*** =") -> accountNameValue = line.substringAfter("=").trim()
+                            line.startsWith("account_name=", ignoreCase = true) -> accountNameValue = line.substringAfter("=").trim()
+                            line.startsWith("***ACCOUNT EMAIL*** =") -> accountEmailValue = line.substringAfter("=").trim()
+                            line.startsWith("account_email=", ignoreCase = true) -> accountEmailValue = line.substringAfter("=").trim()
+                            line.startsWith("***ACCOUNT CHANNEL HANDLE*** =") -> accountChannelHandleValue = line.substringAfter("=").trim()
+                            line.startsWith("account_channel_handle=", ignoreCase = true) -> accountChannelHandleValue = line.substringAfter("=").trim()
+                            "SAPISID=" in line && cookie.isEmpty() -> cookie = line.substringAfter("=").takeIf { "SAPISID=" in it } ?: line
                         }
+                    }
+                    if (cookie.isEmpty() && "SAPISID" in data) {
+                        cookie = data.lines().find { "SAPISID" in it }?.let { line ->
+                            if (line.contains("=")) line.substringAfter("=").trim() else line.trim()
+                        } ?: data.trim()
                     }
                     // Write all credentials atomically to DataStore and wait for completion
                     // before restarting, preventing the race condition where the process
@@ -236,14 +249,7 @@ fun AccountSettings(
                 singleLine = false,
                 maxLines = 20,
                 isInputValid = { fullText ->
-                    // Extract the cookie value from the formatted template line,
-                    // then validate it separately — avoids the bug where parseCookieString
-                    // received the entire multi-line template and failed to find "SAPISID"
-                    // as a key because the "***INNERTUBE COOKIE*** =" prefix shadowed it.
-                    val cookieLine = fullText.lines()
-                        .find { it.startsWith("***INNERTUBE COOKIE*** =") }
-                    val cookieValue = cookieLine?.substringAfter("***INNERTUBE COOKIE*** =")?.trim() ?: ""
-                    cookieValue.isNotEmpty() && "SAPISID" in parseCookieString(cookieValue)
+                    "SAPISID" in fullText
                 },
                 extraContent = {
                     Spacer(Modifier.height(8.dp))

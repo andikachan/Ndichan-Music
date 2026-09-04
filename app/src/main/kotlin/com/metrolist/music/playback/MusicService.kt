@@ -3038,18 +3038,20 @@ class MusicService :
 
             isRemotePlaybackError(error) -> {
                 val streamResolveException = findStreamResolveException(error)
-                if (streamResolveException != null &&
-                    (streamResolveException.reason == StreamResolveException.Reason.UNAVAILABLE ||
-                        streamResolveException.reason == StreamResolveException.Reason.AGE_RESTRICTED ||
-                        streamResolveException.reason == StreamResolveException.Reason.NO_PLAYABLE_STREAM ||
-                        streamResolveException.reason == StreamResolveException.Reason.EXPLICIT_UNSUPPORTED)
-                ) {
-                    Timber.tag(TAG).w("Unrecoverable stream resolution error (${streamResolveException.reason}): ${streamResolveException.message}")
-                    if (mediaId != null) {
-                        markSongAsFailed(mediaId)
+                if (streamResolveException != null) {
+                    val isTerminalReason =
+                        streamResolveException.reason == StreamResolveException.Reason.UNAVAILABLE ||
+                            streamResolveException.reason == StreamResolveException.Reason.AGE_RESTRICTED ||
+                            streamResolveException.reason == StreamResolveException.Reason.EXPLICIT_UNSUPPORTED
+                    val isNoPlayableStream = streamResolveException.reason == StreamResolveException.Reason.NO_PLAYABLE_STREAM
+                    if (isTerminalReason || (isNoPlayableStream && (mediaId == null || hasExceededRetryLimit(mediaId)))) {
+                        Timber.tag(TAG).w("Unrecoverable stream resolution error (${streamResolveException.reason}): ${streamResolveException.message}")
+                        if (mediaId != null) {
+                            markSongAsFailed(mediaId)
+                        }
+                        handleFinalFailure()
+                        return
                     }
-                    handleFinalFailure()
-                    return
                 }
                 Timber.tag(TAG).d("Remote playback error detected (${error.errorCode}), refreshing stream URL")
                 handleExpiredUrlError(mediaId, failedStreamClient)
@@ -3379,7 +3381,7 @@ class MusicService :
         refreshStreamAndRetry(
             mediaId = mediaId,
             failedStreamClient = failedStreamClient,
-            refreshCipherConfig = false,
+            refreshCipherConfig = true,
             retryReason = "stream client error",
         )
     }

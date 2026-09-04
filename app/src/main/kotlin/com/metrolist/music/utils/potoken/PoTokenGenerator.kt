@@ -74,10 +74,9 @@ class PoTokenGenerator(context: Context) {
     }
 
     private companion object {
-        // Healthy cold-start (WebView spin-up + botguard JS + token gen) is ~2–5s in practice;
-        // 15s leaves sufficient slack for slower mobile networks and low-end devices without
-        // timing out prematurely before token generation finishes.
-        const val POTOKEN_TIMEOUT_MS = 15_000L
+        // Cold-start and recreation (WebView spin-up + botguard JS + token gen) can take
+        // longer on background threads or low-end devices; 45s matches INIT_TIMEOUT_MS.
+        const val POTOKEN_TIMEOUT_MS = 45_000L
     }
 
     /**

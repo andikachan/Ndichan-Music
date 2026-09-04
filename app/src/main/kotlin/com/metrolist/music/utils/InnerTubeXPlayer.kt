@@ -61,12 +61,15 @@ object InnerTubeXPlayer {
         allowBoundedRange: Boolean = true,
     ): Result<PlaybackData> =
         try {
+            val isUserLoggedIn = YouTube.cookie?.contains("SAPISID") == true
             val hints =
                 contentHints.copy(
                     isUploaded =
                         contentHints.isUploaded == true ||
                             playlistId == "MLPT" ||
                             playlistId?.contains("MLPT") == true,
+                    isExplicit =
+                        contentHints.isExplicit == true || isUserLoggedIn,
                 ).withStreamCapabilities(
                     allowHls = false,
                     allowSabr = false,

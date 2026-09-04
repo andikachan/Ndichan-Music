@@ -75,6 +75,7 @@ class PoTokenWebView private constructor(
         webViewSettings.javaScriptEnabled = true
         webViewSettings.userAgentString = USER_AGENT
         webViewSettings.blockNetworkLoads = true // the WebView does not need internet access
+        webView.onResume() // keep JavaScript timers running actively even when off-screen
 
         // so that we can run async functions and get back the result
         webView.addJavascriptInterface(this, JS_INTERFACE)
@@ -346,7 +347,7 @@ class PoTokenWebView private constructor(
     }
 
     val isExpired: Boolean
-        get() = Instant.now().isAfter(expirationInstant)
+        get() = if (::expirationInstant.isInitialized) Instant.now().isAfter(expirationInstant) else true
     //endregion
 
     //region Handling multiple emitters
