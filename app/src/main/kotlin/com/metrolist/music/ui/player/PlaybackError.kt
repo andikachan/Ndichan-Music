@@ -242,7 +242,7 @@ internal fun playbackErrorMessages(
 ): List<String> =
     if (isOnline) (listOfNotNull(guidance) + rawErrorMessages).distinct() else listOf(offlineMessage)
 
-private fun buildPlaybackErrorReport(
+fun buildPlaybackErrorReport(
     error: PlaybackException,
     mediaMetadata: MediaMetadata?,
     streamClient: String?,

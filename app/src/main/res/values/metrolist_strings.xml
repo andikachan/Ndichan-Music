@@ -987,4 +987,16 @@
     <string name="stream_source_android_vr_desc">Android VR clients (all versions).</string>
     <string name="stream_source_web_creator">WEB_CREATOR</string>
     <string name="stream_source_web_creator_desc">Creator web client.</string>
+
+    <!-- Playback error history and auto-skip -->
+    <string name="playback_error_history">Playback error history</string>
+    <string name="playback_error_history_desc">View recent playback errors and failed stream reports</string>
+    <string name="playback_error_history_empty">No playback errors recorded</string>
+    <string name="playback_error_history_clear">Clear history</string>
+    <string name="playback_error_history_cleared">Playback error history cleared</string>
+    <string name="playback_error_skipped_toast">Playback error for \"%1$s\". Skipped to next track.</string>
+    <string name="auto_skip_next_on_error_desc">Automatically skip to next song on error. Turn off to inspect error on screen.</string>
+    <string name="view_error_details">View error details</string>
+    <string name="playback_error_count">%1$d error(s) logged</string>
+    <string name="up_to_date">Up to date</string>
 </resources>

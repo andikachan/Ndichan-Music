@@ -497,9 +497,9 @@ class MainActivity : FragmentActivity() {
                         if (!updatesEnabled) return@withContext
 
                         Updater.checkForUpdate().onSuccess { (releaseInfo, hasUpdate) ->
-                            if (releaseInfo != null) {
+                            if (releaseInfo != null && hasUpdate) {
                                 onLatestVersionNameChange(releaseInfo.versionName)
-                                if (hasUpdate && notifEnabled) {
+                                if (notifEnabled) {
                                     val downloadUrl = Updater.getDownloadUrlForCurrentVariant(releaseInfo)
                                     if (downloadUrl != null) {
                                         val intent = Intent(Intent.ACTION_VIEW, downloadUrl.toUri())
@@ -527,6 +527,8 @@ class MainActivity : FragmentActivity() {
                                         }
                                     }
                                 }
+                            } else {
+                                onLatestVersionNameChange(BuildConfig.BASE_VERSION_NAME)
                             }
                         }
 

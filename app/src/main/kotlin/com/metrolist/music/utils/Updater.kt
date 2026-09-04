@@ -44,12 +44,22 @@ object Updater {
     const val KMP_APK_NAME = "Ndichan-Music.apk"
 
     /**
+     * Extracts pure numeric version (e.g., "13.6.3" from "v13.6.3" or "Ndichan Music v13.6.3 (iOS Edition)")
+     */
+    fun cleanVersion(version: String): String {
+        val match = Regex("""\d+(\.\d+)+""").find(version)
+        return match?.value ?: version.removePrefix("v").trim()
+    }
+
+    /**
      * Compares two version strings.
      * Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
      */
     fun compareVersions(v1: String, v2: String): Int {
-        val v1Parts = v1.removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
-        val v2Parts = v2.removePrefix("v").split(".").map { it.toIntOrNull() ?: 0 }
+        val v1Clean = cleanVersion(v1)
+        val v2Clean = cleanVersion(v2)
+        val v1Parts = v1Clean.split(".").map { it.toIntOrNull() ?: 0 }
+        val v2Parts = v2Clean.split(".").map { it.toIntOrNull() ?: 0 }
         val maxLength = maxOf(v1Parts.size, v2Parts.size)
         
         for (i in 0 until maxLength) {
@@ -139,9 +149,10 @@ object Updater {
                     return@runCatching null
                 }
                 
+                val tagName = json.getString("tag_name")
                 val releaseInfo = ReleaseInfo(
-                    tagName = json.getString("tag_name"),
-                    versionName = json.optString("name").takeIf { it.isNotBlank() } ?: json.getString("tag_name"),
+                    tagName = tagName,
+                    versionName = cleanVersion(tagName),
                     description = json.optString("body", ""),
                     releaseDate = json.optString("published_at", ""),
                     assets = parseAssets(json.optJSONArray("assets") ?: JSONArray())
@@ -184,9 +195,10 @@ object Updater {
                     for (i in 0 until json.length()) {
                         val releaseObj = json.getJSONObject(i)
                         if (!releaseObj.has("tag_name")) continue
+                        val itemTagName = releaseObj.getString("tag_name")
                         releases.add(ReleaseInfo(
-                            tagName = releaseObj.getString("tag_name"),
-                            versionName = releaseObj.optString("name").takeIf { it.isNotBlank() } ?: releaseObj.getString("tag_name"),
+                            tagName = itemTagName,
+                            versionName = cleanVersion(itemTagName),
                             description = releaseObj.optString("body", ""),
                             releaseDate = releaseObj.optString("published_at", ""),
                             assets = parseAssets(releaseObj.optJSONArray("assets") ?: JSONArray())

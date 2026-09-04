@@ -997,6 +997,12 @@ fun PlayerSettings(
                         )
                     },
                     onClick = { onAutoSkipNextOnErrorChange(!autoSkipNextOnError) }
+                ),
+                Material3SettingsItem(
+                    icon = painterResource(R.drawable.history),
+                    title = { Text(stringResource(R.string.playback_error_history)) },
+                    description = { Text(stringResource(R.string.playback_error_history_desc)) },
+                    onClick = { navController.navigate("settings/playback_errors") }
                 )
             )
         )

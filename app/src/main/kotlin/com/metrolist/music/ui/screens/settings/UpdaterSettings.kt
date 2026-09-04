@@ -183,7 +183,11 @@ fun UpdaterScreen(
                             if (isChecking) {
                                 Text(stringResource(R.string.checking_for_updates))
                             } else if (latestVersion != null) {
-                                Text(stringResource(R.string.latest_version_format, latestVersion!!))
+                                if (updateAvailable) {
+                                    Text(stringResource(R.string.latest_version_format, latestVersion!!))
+                                } else {
+                                    Text("$latestVersion (${stringResource(R.string.up_to_date)})")
+                                }
                             } else {
                                 Text(stringResource(R.string.check_for_updates_button))
                             }

@@ -1543,6 +1543,14 @@ class MusicService :
         consecutivePlaybackErr += 2
         val nextWindowIndex = player.nextMediaItemIndex
 
+        val songTitle = currentMediaMetadata.value?.title ?: "track"
+        scope.launch(Dispatchers.Main) {
+            try {
+                val msg = getString(R.string.playback_error_skipped_toast, songTitle)
+                android.widget.Toast.makeText(this@MusicService, msg, android.widget.Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
+        }
+
         if (consecutivePlaybackErr <= MAX_CONSECUTIVE_ERR && nextWindowIndex != C.INDEX_UNSET) {
             player.seekTo(nextWindowIndex, C.TIME_UNSET)
             player.prepare()
@@ -2980,6 +2988,11 @@ class MusicService :
             .tag(TAG)
             .w(error, "Player error occurred for $mediaId: errorCode=${error.errorCode}, message=${error.message}")
         reportException(error)
+        PlaybackErrorHistory.recordError(
+            error = error,
+            mediaMetadata = currentMediaMetadata.value,
+            streamClient = failedStreamClient ?: currentStreamClient.value,
+        )
 
         if (mediaId != null && hasExceededRetryLimit(mediaId)) {
             Timber.tag(TAG).w("Song $mediaId has exceeded retry limit, skipping")
@@ -3404,14 +3417,12 @@ class MusicService :
      */
     private fun handleFinalFailure() {
         val autoSkipOnError = dataStore.get(AutoSkipNextOnErrorKey, true)
-        val autoplay = dataStore.get(AutoplayKey, true)
-        val canAdvance = player.hasNextMediaItem()
 
-        if (autoSkipOnError || (autoplay && canAdvance)) {
+        if (autoSkipOnError) {
             Timber.tag(TAG).d("All recovery attempts exhausted, auto-skipping to next track")
             skipOnError()
         } else {
-            Timber.tag(TAG).d("All recovery attempts exhausted, stopping playback")
+            Timber.tag(TAG).d("All recovery attempts exhausted, stopping playback (auto-skip disabled)")
             stopOnError()
         }
     }
