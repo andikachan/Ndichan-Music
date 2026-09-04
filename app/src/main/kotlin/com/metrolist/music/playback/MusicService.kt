@@ -96,6 +96,7 @@ import com.metrolist.innertube.YouTube
 import com.metrolist.innertube.models.SongItem
 import com.metrolist.innertube.models.WatchEndpoint
 import com.metrolist.innertubex.extraction.ContentHints
+import com.metrolist.innertubex.extraction.StreamResolveException
 import com.metrolist.lastfm.LastFM
 import com.metrolist.music.MainActivity
 import com.metrolist.music.R
@@ -2934,8 +2935,27 @@ class MusicService :
         error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ||
             (error.cause as? PlaybackException)?.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
 
-    private fun isRemotePlaybackError(error: PlaybackException): Boolean =
-        error.errorCode == PlaybackException.ERROR_CODE_REMOTE_ERROR
+    private fun findStreamResolveException(error: Throwable): StreamResolveException? {
+        var cause: Throwable? = error
+        while (cause != null) {
+            if (cause is StreamResolveException) return cause
+            cause = cause.cause
+        }
+        return null
+    }
+
+    private fun isRemotePlaybackError(error: PlaybackException): Boolean {
+        if (error.errorCode == PlaybackException.ERROR_CODE_REMOTE_ERROR) return true
+        var cause: Throwable? = error.cause
+        while (cause != null) {
+            if ((cause as? PlaybackException)?.errorCode == PlaybackException.ERROR_CODE_REMOTE_ERROR) {
+                return true
+            }
+            if (cause is StreamResolveException) return true
+            cause = cause.cause
+        }
+        return false
+    }
 
     private fun isStreamClientError(error: PlaybackException): Boolean =
         error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
@@ -3004,6 +3024,18 @@ class MusicService :
             }
 
             isRemotePlaybackError(error) -> {
+                val streamResolveException = findStreamResolveException(error)
+                if (streamResolveException != null &&
+                    (streamResolveException.reason == StreamResolveException.Reason.UNAVAILABLE ||
+                        streamResolveException.reason == StreamResolveException.Reason.AGE_RESTRICTED ||
+                        streamResolveException.reason == StreamResolveException.Reason.NO_PLAYABLE_STREAM ||
+                        streamResolveException.reason == StreamResolveException.Reason.EXPLICIT_UNSUPPORTED)
+                ) {
+                    Timber.tag(TAG).w("Unrecoverable stream resolution error (${streamResolveException.reason}): ${streamResolveException.message}")
+                    markSongAsFailed(mediaId)
+                    handleFinalFailure()
+                    return
+                }
                 Timber.tag(TAG).d("Remote playback error detected (${error.errorCode}), refreshing stream URL")
                 handleExpiredUrlError(mediaId, failedStreamClient)
                 return
@@ -3770,6 +3802,26 @@ class MusicService :
                             throw throwable
                         }
 
+                        is StreamResolveException -> {
+                            val errorMessage =
+                                when (throwable.reason) {
+                                    StreamResolveException.Reason.AGE_RESTRICTED ->
+                                        getString(R.string.error_explicit_login_recommended)
+                                    StreamResolveException.Reason.UNAVAILABLE ->
+                                        getString(R.string.error_job_cancelled)
+                                    StreamResolveException.Reason.NO_PLAYABLE_STREAM ->
+                                        getString(R.string.error_no_stream)
+                                    else ->
+                                        throwable.message?.takeIf(String::isNotBlank)
+                                            ?: getString(R.string.error_unknown)
+                                }
+                            throw PlaybackException(
+                                errorMessage,
+                                throwable,
+                                PlaybackException.ERROR_CODE_REMOTE_ERROR,
+                            )
+                        }
+
                         is java.net.ConnectException, is java.net.UnknownHostException -> {
                             throw PlaybackException(
                                 getString(R.string.error_no_internet),
@@ -3788,7 +3840,8 @@ class MusicService :
 
                         else -> {
                             throw PlaybackException(
-                                getString(R.string.error_unknown),
+                                throwable.message?.takeIf(String::isNotBlank)
+                                    ?: getString(R.string.error_unknown),
                                 throwable,
                                 PlaybackException.ERROR_CODE_REMOTE_ERROR,
                             )

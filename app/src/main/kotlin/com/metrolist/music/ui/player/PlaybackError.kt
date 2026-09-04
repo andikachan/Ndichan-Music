@@ -70,10 +70,12 @@ fun PlaybackError(
         }
     val isJobCancelled =
         rawErrorMessages.any {
-            it.contains("job", ignoreCase = true) &&
+            (it.contains("job", ignoreCase = true) &&
                 (it.contains("cancelled", ignoreCase = true) ||
                     it.contains("canceled", ignoreCase = true) ||
-                    it.contains("cancellat", ignoreCase = true))
+                    it.contains("cancellat", ignoreCase = true))) ||
+                it.contains("unavailable", ignoreCase = true) ||
+                it.contains("not available", ignoreCase = true)
         }
     val guidance =
         when {
