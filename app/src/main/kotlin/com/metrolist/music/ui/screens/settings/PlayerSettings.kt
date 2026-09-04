@@ -980,7 +980,7 @@ fun PlayerSettings(
                 Material3SettingsItem(
                     icon = painterResource(R.drawable.skip_next),
                     title = { Text(stringResource(R.string.auto_skip_next_on_error)) },
-                    description = { Text(stringResource(R.string.auto_skip_next_on_error_desc)) },
+                    description = { Text(stringResource(R.string.auto_skip_next_on_error_explanation)) },
                     trailingContent = {
                         Switch(
                             checked = autoSkipNextOnError,
