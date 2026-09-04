@@ -3032,7 +3032,9 @@ class MusicService :
                         streamResolveException.reason == StreamResolveException.Reason.EXPLICIT_UNSUPPORTED)
                 ) {
                     Timber.tag(TAG).w("Unrecoverable stream resolution error (${streamResolveException.reason}): ${streamResolveException.message}")
-                    markSongAsFailed(mediaId)
+                    if (mediaId != null) {
+                        markSongAsFailed(mediaId)
+                    }
                     handleFinalFailure()
                     return
                 }
