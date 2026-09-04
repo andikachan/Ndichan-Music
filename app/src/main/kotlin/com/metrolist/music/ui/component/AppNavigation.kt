@@ -34,6 +34,12 @@ import com.metrolist.music.ui.screens.Screens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
 @Stable
 private fun isRouteSelected(currentRoute: String?, screenRoute: String, navigationItems: List<Screens>): Boolean {
     if (currentRoute == null) return false
@@ -116,6 +122,11 @@ fun AppNavigationRail(
                     // Long presses are handled via InteractionSource
                 },
                 interactionSource = interactionSource,
+                colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
+                    indicatorColor = Color.Transparent,
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = Color(0xFF8E8E93),
+                ),
                 icon = {
                     Icon(
                         painter = painterResource(id = iconRes),
@@ -140,15 +151,24 @@ fun AppNavigationBar(
     onSearchLongClick: (() -> Unit)? = null,
     onHomeLongHold: (() -> Unit)? = null,
 ) {
-    val containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
+    val containerColor = if (pureBlack) Color(0xF5000000) else MaterialTheme.colorScheme.surfaceContainer
     val contentColor = if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
     val haptics = LocalHapticFeedback.current
     val viewConfiguration = LocalViewConfiguration.current
 
     NavigationBar(
-        modifier = modifier,
+        modifier = modifier.drawBehind {
+            val strokeWidth = 0.5.dp.toPx()
+            drawLine(
+                color = if (pureBlack) Color(0x388E8E93) else Color(0x248E8E93),
+                start = Offset(0f, 0f),
+                end = Offset(size.width, 0f),
+                strokeWidth = strokeWidth
+            )
+        },
         containerColor = containerColor,
-        contentColor = contentColor
+        contentColor = contentColor,
+        tonalElevation = 0.dp
     ) {
         navigationItems.forEach { screen ->
             val isSelected = remember(currentRoute, screen.route) {
@@ -199,9 +219,11 @@ fun AppNavigationBar(
                 },
                 interactionSource = interactionSource,
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                    indicatorColor = Color.Transparent,
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = Color(0xFF8E8E93),
+                    unselectedTextColor = Color(0xFF8E8E93),
                 ),
                 icon = {
                     Icon(
@@ -213,6 +235,9 @@ fun AppNavigationBar(
                     {
                         Text(
                             text = stringResource(screen.titleId),
+                            fontSize = 10.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            letterSpacing = (-0.1).sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

@@ -5,13 +5,19 @@
 
 package com.metrolist.music.ui.screens.search
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,6 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -181,9 +188,22 @@ fun SearchScreen(
             TopAppBar(
                 title = {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 4.dp)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (pureBlack) Color(0xFF1C1C1E) else MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .padding(horizontal = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Icon(
+                            painter = painterResource(R.drawable.search),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
                         BasicTextField(
                             value = query,
                             onValueChange = { query = it },
@@ -194,7 +214,7 @@ fun SearchScreen(
                             textStyle =
                                 TextStyle(
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 16.sp,
+                                    fontSize = 15.sp,
                                 ),
                             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                             singleLine = true,
@@ -210,8 +230,8 @@ fun SearchScreen(
                                             ),
                                         style =
                                             TextStyle(
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                                fontSize = 16.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 15.sp,
                                             ),
                                     )
                                 }
@@ -227,39 +247,43 @@ fun SearchScreen(
                                 ),
                         )
 
-                        Row {
-                            if (query.text.isNotEmpty()) {
-                                IconButton(onClick = { query = TextFieldValue("") }) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.close),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            }
+                        if (query.text.isNotEmpty()) {
                             IconButton(
-                                onClick = {
-                                    searchSource =
-                                        if (searchSource == SearchSource.ONLINE) {
-                                            SearchSource.LOCAL
-                                        } else {
-                                            SearchSource.ONLINE
-                                        }
-                                },
+                                onClick = { query = TextFieldValue("") },
+                                modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(
-                                    painter =
-                                        painterResource(
-                                            when (searchSource) {
-                                                SearchSource.LOCAL -> R.drawable.library_music
-                                                SearchSource.ONLINE -> R.drawable.language
-                                            },
-                                        ),
+                                    painter = painterResource(R.drawable.close),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp),
                                 )
                             }
                         }
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            searchSource =
+                                if (searchSource == SearchSource.ONLINE) {
+                                    SearchSource.LOCAL
+                                } else {
+                                    SearchSource.ONLINE
+                                }
+                        },
+                    ) {
+                        Icon(
+                            painter =
+                                painterResource(
+                                    when (searchSource) {
+                                        SearchSource.LOCAL -> R.drawable.library_music
+                                        SearchSource.ONLINE -> R.drawable.language
+                                    },
+                                ),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 },
                 navigationIcon = {
@@ -273,7 +297,7 @@ fun SearchScreen(
                 },
                 colors =
                     TopAppBarDefaults.topAppBarColors(
-                        containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
+                        containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface,
                     ),
             )
         },

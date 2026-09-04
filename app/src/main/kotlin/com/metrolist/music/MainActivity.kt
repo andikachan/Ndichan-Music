@@ -541,7 +541,7 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
+        val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = false)
         val enableHighRefreshRate by rememberPreference(EnableHighRefreshRateKey, defaultValue = true)
 
         LaunchedEffect(enableHighRefreshRate) {
@@ -585,7 +585,7 @@ class MainActivity : FragmentActivity() {
 
         val enableLandscapeScaling by rememberPreference(EnableLandscapeScalingKey, defaultValue = false)
         val userDensityScale by rememberPreference(DensityScaleKey, defaultValue = 1f)
-        val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = false)
+        val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = true)
         val pureBlack =
             remember(pureBlackEnabled, useDarkTheme) {
                 pureBlackEnabled && useDarkTheme

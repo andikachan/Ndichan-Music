@@ -25,7 +25,93 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.materialkolor.score.Score
 
-val DefaultThemeColor = Color(0xFFED5564)
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+
+val AppleMusicRed = Color(0xFFFA243C)
+val DefaultThemeColor = AppleMusicRed
+
+fun createIosColorScheme(isDark: Boolean, accentColor: Color = AppleMusicRed): ColorScheme {
+    return if (isDark) {
+        darkColorScheme(
+            primary = accentColor,
+            onPrimary = Color.White,
+            primaryContainer = accentColor.copy(alpha = 0.22f),
+            onPrimaryContainer = Color(0xFFFFDADE),
+            inversePrimary = Color.White,
+            secondary = accentColor,
+            onSecondary = Color.White,
+            secondaryContainer = Color(0xFF1C1C1E),
+            onSecondaryContainer = Color.White,
+            tertiary = accentColor,
+            onTertiary = Color.White,
+            tertiaryContainer = Color(0xFF2C2C2E),
+            onTertiaryContainer = Color.White,
+            background = Color.Black,
+            onBackground = Color.White,
+            surface = Color.Black,
+            onSurface = Color.White,
+            surfaceVariant = Color(0xFF1C1C1E),
+            onSurfaceVariant = Color(0xFF8E8E93),
+            surfaceTint = Color.Transparent,
+            inverseSurface = Color.White,
+            inverseOnSurface = Color.Black,
+            error = Color(0xFFFF453A),
+            onError = Color.White,
+            errorContainer = Color(0x33FF453A),
+            onErrorContainer = Color(0xFFFF453A),
+            outline = Color(0xFF38383A),
+            outlineVariant = Color(0xFF2C2C2E),
+            scrim = Color.Black.copy(alpha = 0.6f),
+            surfaceBright = Color(0xFF2C2C2E),
+            surfaceDim = Color.Black,
+            surfaceContainer = Color(0xFF1C1C1E),
+            surfaceContainerHigh = Color(0xFF2C2C2E),
+            surfaceContainerHighest = Color(0xFF3A3A3C),
+            surfaceContainerLow = Color(0xFF121214),
+            surfaceContainerLowest = Color.Black,
+        )
+    } else {
+        lightColorScheme(
+            primary = accentColor,
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFFFDADE),
+            onPrimaryContainer = Color(0xFF41000B),
+            inversePrimary = Color.White,
+            secondary = accentColor,
+            onSecondary = Color.White,
+            secondaryContainer = Color(0xFFE5E5EA),
+            onSecondaryContainer = Color.Black,
+            tertiary = accentColor,
+            onTertiary = Color.White,
+            tertiaryContainer = Color(0xFFF2F2F7),
+            onTertiaryContainer = Color.Black,
+            background = Color.White,
+            onBackground = Color.Black,
+            surface = Color.White,
+            onSurface = Color.Black,
+            surfaceVariant = Color(0xFFF2F2F7),
+            onSurfaceVariant = Color(0xFF8E8E93),
+            surfaceTint = Color.Transparent,
+            inverseSurface = Color.Black,
+            inverseOnSurface = Color.White,
+            error = Color(0xFFFF3B30),
+            onError = Color.White,
+            errorContainer = Color(0xFFFFDAD6),
+            onErrorContainer = Color(0xFF410002),
+            outline = Color(0xFFC6C6C8),
+            outlineVariant = Color(0xFFE5E5EA),
+            scrim = Color.Black.copy(alpha = 0.4f),
+            surfaceBright = Color.White,
+            surfaceDim = Color(0xFFE5E5EA),
+            surfaceContainer = Color(0xFFF2F2F7),
+            surfaceContainerHigh = Color(0xFFE5E5EA),
+            surfaceContainerHighest = Color(0xFFD1D1D6),
+            surfaceContainerLow = Color(0xFFF8F8F9),
+            surfaceContainerLowest = Color.White,
+        )
+    }
+}
 
 @Composable
 fun MetrolistTheme(
@@ -34,34 +120,15 @@ fun MetrolistTheme(
     themeColor: Color = DefaultThemeColor,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    // Determine if system dynamic colors should be used (Android S+ and default theme color)
-    val useSystemDynamicColor = (themeColor == DefaultThemeColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-
-    // Select the appropriate color scheme generation method
-    val baseColorScheme = if (useSystemDynamicColor) {
-        // Use standard Material 3 dynamic color functions for system wallpaper colors
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        // Use materialKolor only when a specific seed color is provided
-        rememberDynamicColorScheme(
-            seedColor = themeColor, // themeColor is guaranteed non-default here
-            isDark = darkTheme,
-            specVersion = ColorSpec.SpecVersion.SPEC_2025,
-            style = PaletteStyle.TonalSpot // Keep existing style
-        )
-    }
-
-    // Apply pureBlack modification if needed, similar to original logic
-    val colorScheme = remember(baseColorScheme, pureBlack, darkTheme) {
+    val colorScheme = remember(themeColor, darkTheme, pureBlack) {
+        val base = createIosColorScheme(isDark = darkTheme, accentColor = themeColor)
         if (darkTheme && pureBlack) {
-            baseColorScheme.pureBlack(true)
+            base.copy(surface = Color.Black, background = Color.Black)
         } else {
-            baseColorScheme
+            base
         }
     }
 
-    // Use standard MaterialTheme instead of MaterialExpressiveTheme
     MaterialTheme(
         colorScheme = colorScheme,
         content = content,

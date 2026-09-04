@@ -35,6 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.metrolist.music.R
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.unit.sp
+
 @Composable
 fun NavigationTitle(
     title: String,
@@ -53,7 +56,7 @@ fun NavigationTitle(
             .clickable(enabled = onClick != null) {
                 onClick?.invoke()
             }
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         thumbnail?.invoke()
 
@@ -64,16 +67,18 @@ fun NavigationTitle(
             label?.let { label ->
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = (-0.4).sp,
+                color = MaterialTheme.colorScheme.onSurface,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
@@ -82,18 +87,18 @@ fun NavigationTitle(
         onPlayAllClick?.let { playAllClick ->
             OutlinedButton(
                 onClick = playAllClick,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                shape = CircleShape,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary
                 ),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
-                modifier = Modifier
-                    .height(24.dp)
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 2.dp),
+                modifier = Modifier.height(28.dp)
             ) {
                 Text(
                     text = stringResource(R.string.play_all),
-                    style = MaterialTheme.typography.labelSmall
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -102,7 +107,8 @@ fun NavigationTitle(
             Icon(
                 painter = painterResource(R.drawable.arrow_forward),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.padding(start = 2.dp)
             )
         }
     }

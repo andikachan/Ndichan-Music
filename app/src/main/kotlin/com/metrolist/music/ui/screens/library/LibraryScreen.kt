@@ -23,6 +23,15 @@ import com.metrolist.music.constants.PlaylistViewTypeKey
 import com.metrolist.music.ui.component.ChipsRow
 import com.metrolist.music.utils.rememberEnumPreference
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
 @Composable
 fun LibraryScreen() {
     val navController = LocalNavController.current
@@ -31,21 +40,33 @@ fun LibraryScreen() {
     var playlistViewType by rememberEnumPreference(PlaylistViewTypeKey, LibraryViewType.GRID)
 
     val filterContent = @Composable {
-        Row {
-            ChipsRow(
-                chips = listOf(
-                    LibraryFilter.PLAYLISTS to stringResource(R.string.filter_playlists),
-                    LibraryFilter.SONGS to stringResource(R.string.filter_songs),
-                    LibraryFilter.ALBUMS to stringResource(R.string.filter_albums),
-                    LibraryFilter.ARTISTS to stringResource(R.string.filter_artists),
-                    LibraryFilter.PODCASTS to stringResource(R.string.filter_podcasts),
-                ),
-                currentValue = filterType,
-                onValueUpdate = {
-                    filterType = if (filterType == it) LibraryFilter.LIBRARY else it
-                },
-                modifier = Modifier.weight(1f),
+        Column {
+            Text(
+                text = stringResource(R.string.filter_library),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.6).sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
             )
+            Row {
+                ChipsRow(
+                    chips = listOf(
+                        LibraryFilter.PLAYLISTS to stringResource(R.string.filter_playlists),
+                        LibraryFilter.SONGS to stringResource(R.string.filter_songs),
+                        LibraryFilter.ALBUMS to stringResource(R.string.filter_albums),
+                        LibraryFilter.ARTISTS to stringResource(R.string.filter_artists),
+                        LibraryFilter.PODCASTS to stringResource(R.string.filter_podcasts),
+                    ),
+                    currentValue = filterType,
+                    onValueUpdate = {
+                        filterType = if (filterType == it) LibraryFilter.LIBRARY else it
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 

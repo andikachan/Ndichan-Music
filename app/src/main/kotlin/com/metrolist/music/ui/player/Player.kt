@@ -219,7 +219,7 @@ fun BottomSheetPlayer(
     val (useNewPlayerDesign, onUseNewPlayerDesignChange) =
         rememberPreference(
             UseNewPlayerDesignKey,
-            defaultValue = true,
+            defaultValue = false,
         )
     val (hidePlayerThumbnail, onHidePlayerThumbnailChange) = rememberPreference(HidePlayerThumbnailKey, false)
     val (hideStatusBarOnFullscreen) = rememberPreference(HideStatusBarOnFullscreenKey, false)
@@ -1504,7 +1504,7 @@ fun BottomSheetPlayer(
                 exit = shrinkVertically(shrinkTowards = Alignment.Top) + slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             ) {
                 Column {
-                    if (useNewPlayerDesign) {
+                    if (false) {
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
@@ -1738,7 +1738,7 @@ fun BottomSheetPlayer(
                                 modifier =
                                     Modifier
                                         .size(72.dp)
-                                        .clip(RoundedCornerShape(playPauseRoundness))
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
                                         .background(textButtonColor)
                                         .clickable {
                                             if (isListenTogetherGuest) {

@@ -84,8 +84,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.metrolist.music.LocalNavController
@@ -1189,6 +1191,44 @@ fun HomeScreen(
                 state = lazylistState,
                 contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             ) {
+                item(key = "ios_large_title_header") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home),
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.6).sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        IconButton(
+                            onClick = { navController.navigate("settings") },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            if (url != null) {
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp).clip(CircleShape)
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.settings),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item {
                     ChipsRow(
                         chips = homePage?.chips?.map { it to it.title } ?: emptyList(),

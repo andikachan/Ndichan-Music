@@ -52,8 +52,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.metrolist.music.R
-import com.metrolist.music.ui.screens.OptionStats
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun <E> ChipsRow(
@@ -73,14 +73,24 @@ fun <E> ChipsRow(
         Spacer(Modifier.width(12.dp))
 
         chips.forEach { (value, label) ->
+            val isSelected = currentValue == value
             FilterChip(
-                label = { Text(label) },
-                selected = currentValue == value,
+                label = {
+                    Text(
+                        text = label,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        fontSize = 13.sp,
+                    )
+                },
+                selected = isSelected,
                 colors = FilterChipDefaults.filterChipColors(
                     containerColor = containerColor,
+                    labelColor = MaterialTheme.colorScheme.onSurface,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = Color.White,
                 ),
                 onClick = { onValueUpdate(value) },
-                shape = RoundedCornerShape(16.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
                 border = null
             )
 
