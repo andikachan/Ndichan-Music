@@ -3,7 +3,7 @@ name: Build Fork APK
 on:
   workflow_dispatch:
   push:
-    branches: ["ndichan/ios-edition"]
+    branches: ["main", "ndichan/ios-edition"]
 
 jobs:
   build:
