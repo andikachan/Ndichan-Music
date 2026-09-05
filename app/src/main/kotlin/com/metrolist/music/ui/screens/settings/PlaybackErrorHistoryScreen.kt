@@ -372,7 +372,7 @@ fun PlaybackErrorHistoryScreen(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("Playback Error Report", item.fullReport))
-                        uriHandler.openUri("https://github.com/andikachan/Metrolist/issues/new")
+                        uriHandler.openUri("https://github.com/andikachan/Ndichan-Music/issues/new")
                     },
                 ) {
                     Icon(

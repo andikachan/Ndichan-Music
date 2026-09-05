@@ -215,7 +215,7 @@ fun PlaybackError(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("Ndichan Music Playback Error", errorReport))
-                    uriHandler.openUri("https://github.com/andikachan/Metrolist/issues/new")
+                    uriHandler.openUri("https://github.com/andikachan/Ndichan-Music/issues/new")
                 },
                 shape = RoundedCornerShape(20.dp),
             ) {

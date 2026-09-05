@@ -39,8 +39,8 @@ object Updater {
     private var cachedAllReleases: List<ReleaseInfo> = emptyList()
     
     private const val CHECK_INTERVAL_MILLIS = 2 * 60 * 60 * 1000L // 2 hours
-    private const val GITHUB_API_BASE = "https://api.github.com/repos/andikachan/Metrolist"
-    private const val KMP_RELEASES_URL = "https://api.github.com/repos/andikachan/Metrolist/releases?per_page=30"
+    private const val GITHUB_API_BASE = "https://api.github.com/repos/andikachan/Ndichan-Music"
+    private const val KMP_RELEASES_URL = "https://api.github.com/repos/andikachan/Ndichan-Music/releases?per_page=30"
     const val KMP_APK_NAME = "Ndichan-Music.apk"
 
     /**

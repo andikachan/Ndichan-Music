@@ -111,8 +111,8 @@ private val leadDeveloper = Contributor(
 )
 
 private val communityLinks = listOf(
-    CommunityLink(R.string.credits_view_repo, R.drawable.github, "https://github.com/andikachan/Metrolist"),
-    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/andikachan/Metrolist/blob/main/LICENSE")
+    CommunityLink(R.string.credits_view_repo, R.drawable.github, "https://github.com/andikachan/Ndichan-Music"),
+    CommunityLink(R.string.credits_license_name, R.drawable.info, "https://github.com/andikachan/Ndichan-Music/blob/main/LICENSE")
 )
 
 private fun handleEasterEggClick(
