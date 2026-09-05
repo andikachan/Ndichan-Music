@@ -80,3 +80,14 @@ jobs:
           name: Ndichan-Music-iOS-Edition-APK
           path: output_apk/Ndichan-Music-iOS-Edition.apk
           retention-days: 14
+
+      - name: Update GitHub Release Assets
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ndichan/ios-edition'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            echo "Uploading APK to latest release: $LATEST_TAG"
+            gh release upload "$LATEST_TAG" output_apk/Ndichan-Music-iOS-Edition.apk --clobber || true
+          fi
