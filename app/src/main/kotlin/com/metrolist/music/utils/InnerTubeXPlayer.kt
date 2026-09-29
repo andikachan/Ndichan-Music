@@ -61,15 +61,14 @@ object InnerTubeXPlayer {
         allowBoundedRange: Boolean = true,
     ): Result<PlaybackData> =
         try {
-            val isUserLoggedIn = YouTube.cookie?.contains("SAPISID") == true
+            val isUploaded =
+                contentHints.isUploaded == true ||
+                    playlistId == "MLPT" ||
+                    playlistId?.contains("MLPT") == true
             val hints =
                 contentHints.copy(
-                    isUploaded =
-                        contentHints.isUploaded == true ||
-                            playlistId == "MLPT" ||
-                            playlistId?.contains("MLPT") == true,
-                    isExplicit =
-                        contentHints.isExplicit == true || isUserLoggedIn,
+                    isUploaded = isUploaded,
+                    isExplicit = contentHints.isExplicit == true,
                 ).withStreamCapabilities(
                     allowHls = false,
                     allowSabr = false,
@@ -77,17 +76,36 @@ object InnerTubeXPlayer {
                 )
             val excludedClients = failedStreamClients(videoId)
             val stream =
-                requireNotNull(
+                try {
                     bundle().extractor.extract(
                         videoId = videoId,
                         hints = hints,
                         excludedClients = excludedClients,
                         audioQuality = audioQuality.toInnerTubeX(connectivityManager),
                         clientPlaybackNonce = generateClientPlaybackNonce(),
-                    ),
-                ) { "InnerTubeX returned no playable stream" }
-            check(stream.sabrBootstrap == null) { "SABR is not supported by this playback engine" }
-            Result.success(stream.toPlaybackData())
+                    )
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    Timber.tag(TAG).w(error, "First extraction attempt failed for $videoId, trying fallback")
+                    null
+                } ?: run {
+                    if (hints.isExplicit == true || hints.isUploaded == true || excludedClients.isNotEmpty()) {
+                        val fallbackHints = hints.copy(isExplicit = false, isUploaded = false)
+                        bundle().extractor.extract(
+                            videoId = videoId,
+                            hints = fallbackHints,
+                            excludedClients = emptySet(),
+                            audioQuality = audioQuality.toInnerTubeX(connectivityManager),
+                            clientPlaybackNonce = generateClientPlaybackNonce(),
+                        )
+                    } else {
+                        null
+                    }
+                }
+            val extractedStream = requireNotNull(stream) { "InnerTubeX returned no playable stream" }
+            check(extractedStream.sabrBootstrap == null) { "SABR is not supported by this playback engine" }
+            Result.success(extractedStream.toPlaybackData())
         } catch (error: CancellationException) {
             throw error
         } catch (error: StreamResolveException) {
