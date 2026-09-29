@@ -16,6 +16,12 @@ class PoTokenGenerator(context: Context) {
     private val applicationContext = context.applicationContext
 
     private val webViewSupported by lazy { runCatching { CookieManager.getInstance() }.isSuccess }
+    private val isTelevision by lazy {
+        val uiModeManager = applicationContext.getSystemService(Context.UI_MODE_SERVICE) as? android.app.UiModeManager
+        uiModeManager?.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION ||
+            applicationContext.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK) ||
+            applicationContext.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TELEVISION)
+    }
     private var webViewBadImpl = false // whether the system has a bad WebView implementation
 
     private val webPoTokenGenLock = Mutex()
@@ -24,6 +30,10 @@ class PoTokenGenerator(context: Context) {
     private var webPoTokenGenerator: PoTokenWebView? = null
 
     suspend fun getWebClientPoToken(videoId: String, sessionId: String): PoTokenResult? {
+        if (isTelevision) {
+            Timber.tag(TAG).d("Android TV detected: bypassing PoToken generation")
+            return null
+        }
         Timber.tag(TAG).d("WebView state: supported=$webViewSupported, badImpl=$webViewBadImpl")
         if (!webViewSupported || webViewBadImpl) {
             Timber.tag(TAG).d("WebView not available: supported=$webViewSupported, badImpl=$webViewBadImpl")
@@ -40,6 +50,7 @@ class PoTokenGenerator(context: Context) {
             // playerResponseForPlayback can fall through to non-PoToken fallback clients (e.g.
             // ANDROID_TESTSUITE, IOS) instead of blocking the entire playback path.
             Timber.tag(TAG).w("poToken generation timed out after ${POTOKEN_TIMEOUT_MS}ms; proceeding without PoToken")
+            webViewBadImpl = true
             clearGenerator()
             null
         } catch (e: CancellationException) {

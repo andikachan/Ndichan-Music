@@ -3474,7 +3474,13 @@ class MusicService :
                                                 .header("Proxy-Authorization", auth)
                                                 .build()
                                         } ?: response.request
-                                    }.build(),
+                                    }
+                                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                                    .followRedirects(true)
+                                    .followSslRedirects(true)
+                                    .retryOnConnectionFailure(true)
+                                    .build(),
                             ),
                         ),
                     ),
