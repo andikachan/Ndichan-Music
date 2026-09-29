@@ -38,7 +38,7 @@ class PoTokenGenerator(context: Context) {
             // The WebView's sandboxed process can be culled by the OS (storage pressure, low
             // memory, etc.) which leaves the PoToken WebView call hung indefinitely. Cap it so
             // playerResponseForPlayback can fall through to non-PoToken fallback clients (e.g.
-            // ANDROID_VR) instead of blocking the entire playback path.
+            // ANDROID_TESTSUITE, IOS) instead of blocking the entire playback path.
             Timber.tag(TAG).w("poToken generation timed out after ${POTOKEN_TIMEOUT_MS}ms; proceeding without PoToken")
             clearGenerator()
             null
@@ -49,8 +49,13 @@ class PoTokenGenerator(context: Context) {
             webViewBadImpl = true
             null
         } catch (e: Exception) {
-            Timber.tag(TAG).e("PO token generation failed type=${e::class.simpleName ?: "unknown"}")
-            throw e
+            Timber.tag(TAG).w("PO token generation failed (${e::class.simpleName ?: "unknown"}: ${e.message}); proceeding without PoToken")
+            clearGenerator()
+            null
+        } catch (t: Throwable) {
+            Timber.tag(TAG).w("PO token generation failed with error: ${t.message}; proceeding without PoToken")
+            clearGenerator()
+            null
         }
     }
 
@@ -74,9 +79,9 @@ class PoTokenGenerator(context: Context) {
     }
 
     private companion object {
-        // Cold-start and recreation (WebView spin-up + botguard JS + token gen) can take
-        // longer on background threads or low-end devices; 45s matches INIT_TIMEOUT_MS.
-        const val POTOKEN_TIMEOUT_MS = 45_000L
+        // Cold-start and recreation (WebView spin-up + botguard JS + token gen).
+        // 12s allows timely fallback on TV/low-end devices when WebView is slow/broken.
+        const val POTOKEN_TIMEOUT_MS = 12_000L
     }
 
     /**
@@ -84,7 +89,7 @@ class PoTokenGenerator(context: Context) {
      * case the current [webPoTokenGenerator] threw an error last time
      * [PoTokenWebView.generatePoToken] was called
      */
-    private suspend fun getWebClientPoToken(videoId: String, sessionId: String, forceRecreate: Boolean): PoTokenResult {
+    private suspend fun getWebClientPoToken(videoId: String, sessionId: String, forceRecreate: Boolean): PoTokenResult? {
         val (poTokenGenerator, streamingPot, hasBeenRecreated) =
             webPoTokenGenLock.withLock {
                 val shouldRecreate =
@@ -109,7 +114,12 @@ class PoTokenGenerator(context: Context) {
                     webPoTokenStreamingPot = null
                     webPoTokenSessionId = null
 
-                    val newGenerator = PoTokenWebView.getNewPoTokenGenerator(applicationContext)
+                    val newGenerator = try {
+                        PoTokenWebView.getNewPoTokenGenerator(applicationContext)
+                    } catch (t: Throwable) {
+                        Timber.tag(TAG).w(t, "Failed to create PoTokenWebView")
+                        return null
+                    }
 
                     // The streaming poToken needs to be generated exactly once before generating
                     // any other (player) tokens.
@@ -118,7 +128,7 @@ class PoTokenGenerator(context: Context) {
                     } catch (t: Throwable) {
                         // Don't leak the freshly created WebView (close() hops to Main itself).
                         runCatching { newGenerator.close() }
-                        throw t
+                        return null
                     }
 
                     webPoTokenGenerator = newGenerator
@@ -127,8 +137,10 @@ class PoTokenGenerator(context: Context) {
                     Timber.tag(TAG).d("Streaming PO token generated")
                 }
 
-                Triple(webPoTokenGenerator!!, webPoTokenStreamingPot!!, shouldRecreate)
+                Triple(webPoTokenGenerator, webPoTokenStreamingPot, shouldRecreate)
             }
+
+        if (poTokenGenerator == null || streamingPot == null) return null
 
         val playerPot = try {
             poTokenGenerator.generatePoToken(videoId)
