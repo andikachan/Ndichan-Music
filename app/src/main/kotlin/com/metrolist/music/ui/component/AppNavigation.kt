@@ -86,7 +86,7 @@ fun AppNavigationRail(
 
             val isSearchItem = screen == Screens.Search && onSearchLongClick != null
             val isHomeHoldItem = screen == Screens.Home && onHomeLongHold != null
-            val interactionSource = remember { MutableInteractionSource() }
+            var handledByPointerPress by remember { mutableStateOf(false) }
 
             // Long press detection using InteractionSource
             if (isSearchItem || isHomeHoldItem) {
@@ -96,6 +96,7 @@ fun AppNavigationRail(
                         when (interaction) {
                             is PressInteraction.Press -> {
                                 isLongClick = false
+                                handledByPointerPress = true
                                 delay(if (isHomeHoldItem) 15_000L else viewConfiguration.longPressTimeoutMillis)
                                 isLongClick = true
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -105,9 +106,12 @@ fun AppNavigationRail(
                                 if (!isLongClick) {
                                     onItemClick(screen, currentIsSelected)
                                 }
+                                delay(100)
+                                handledByPointerPress = false
                             }
                             is PressInteraction.Cancel -> {
                                 isLongClick = false
+                                handledByPointerPress = false
                             }
                         }
                     }
@@ -118,10 +122,9 @@ fun AppNavigationRail(
             NavigationRailItem(
                 selected = isSelected,
                 onClick = {
-                    if (!isSearchItem && !isHomeHoldItem) {
+                    if (!handledByPointerPress) {
                         onItemClick(screen, currentIsSelected)
                     }
-                    // Long presses are handled via InteractionSource
                 },
                 interactionSource = interactionSource,
                 colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
@@ -184,6 +187,7 @@ fun AppNavigationBar(
             val isSearchItem = screen == Screens.Search && onSearchLongClick != null
             val isHomeHoldItem = screen == Screens.Home && onHomeLongHold != null
             val interactionSource = remember { MutableInteractionSource() }
+            var handledByPointerPress by remember { mutableStateOf(false) }
 
             // Long press detection using InteractionSource
             if (isSearchItem || isHomeHoldItem) {
@@ -193,6 +197,7 @@ fun AppNavigationBar(
                         when (interaction) {
                             is PressInteraction.Press -> {
                                 isLongClick = false
+                                handledByPointerPress = true
                                 delay(if (isHomeHoldItem) 15_000L else viewConfiguration.longPressTimeoutMillis)
                                 isLongClick = true
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -202,9 +207,12 @@ fun AppNavigationBar(
                                 if (!isLongClick) {
                                     onItemClick(screen, currentIsSelected)
                                 }
+                                delay(100)
+                                handledByPointerPress = false
                             }
                             is PressInteraction.Cancel -> {
                                 isLongClick = false
+                                handledByPointerPress = false
                             }
                         }
                     }
@@ -215,10 +223,9 @@ fun AppNavigationBar(
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    if (!isSearchItem && !isHomeHoldItem) {
+                    if (!handledByPointerPress) {
                         onItemClick(screen, currentIsSelected)
                     }
-                    // Long presses are handled via InteractionSource
                 },
                 interactionSource = interactionSource,
                 colors = NavigationBarItemDefaults.colors(

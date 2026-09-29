@@ -356,8 +356,12 @@ fun BottomSheetPlayer(
             delay(100)
             try {
                 focusRequester.requestFocus()
-            } catch (e: Exception) {
-                // Ignore if focus request fails
+            } catch (_: Exception) {
+            }
+            delay(300)
+            try {
+                focusRequester.requestFocus()
+            } catch (_: Exception) {
             }
         }
     }
@@ -1000,20 +1004,32 @@ fun BottomSheetPlayer(
                         transitionSpec = { fadeIn() togetherWith fadeOut() },
                         label = "",
                     ) { title ->
+                        val titleInteractionSource = remember { MutableInteractionSource() }
+                        val isTitleFocused by titleInteractionSource.collectIsFocusedAsState()
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = TextBackgroundColor,
+                            color = if (isTitleFocused) MaterialTheme.colorScheme.primary else TextBackgroundColor,
                             modifier =
                                 Modifier
                                     .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
+                                    .then(
+                                        if (isTitleFocused) {
+                                            Modifier
+                                                .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
                                     .combinedClickable(
                                         enabled = true,
                                         indication = null,
-                                        interactionSource = remember { MutableInteractionSource() },
+                                        interactionSource = titleInteractionSource,
                                         onClick = {
                                             val albumId = mediaMetadata.album?.id
                                                 ?: currentSong?.album?.id
@@ -1054,18 +1070,33 @@ fun BottomSheetPlayer(
                                     }
                                 }
 
+                            val artistInteractionSource = remember { MutableInteractionSource() }
+                            val isArtistFocused by artistInteractionSource.collectIsFocusedAsState()
+
                             Box(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
-                                        .padding(end = 12.dp),
+                                        .padding(end = 12.dp)
+                                        .then(
+                                            if (isArtistFocused) {
+                                                Modifier
+                                                    .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
                             ) {
                                 var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
                                 var clickOffset by remember { mutableStateOf<Offset?>(null) }
                                 Text(
                                     text = annotatedString,
-                                    style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = if (isArtistFocused) MaterialTheme.colorScheme.primary else TextBackgroundColor
+                                    ),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     onTextLayout = { layoutResult = it },
@@ -1084,7 +1115,7 @@ fun BottomSheetPlayer(
                                             }.combinedClickable(
                                                 enabled = true,
                                                 indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
+                                                interactionSource = artistInteractionSource,
                                                 onClick = {
                                                     val tapPosition = clickOffset
                                                     val layout = layoutResult
@@ -1100,6 +1131,12 @@ fun BottomSheetPlayer(
                                                                     state.collapseSoft()
                                                                 }
                                                             }
+                                                    } else {
+                                                        val firstArtistId = mediaMetadata.artists.firstOrNull { it.id?.isNotBlank() == true }?.id
+                                                        if (firstArtistId != null) {
+                                                            navController.navigate("artist/$firstArtistId")
+                                                            state.collapseSoft()
+                                                        }
                                                     }
                                                 },
                                                 onLongClick = {
@@ -1297,19 +1334,32 @@ fun BottomSheetPlayer(
                     }
                 } else {
                     AnimatedContent(targetState = showInlineLyrics, label = "ShareButton") { showLyrics ->
+                        val shareInteractionSource = remember { MutableInteractionSource() }
+                        val isShareFocused by shareInteractionSource.collectIsFocusedAsState()
                         if (showLyrics) {
                             Box(
                                 modifier =
                                     Modifier
                                         .size(40.dp)
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(textButtonColor)
-                                        .clickable { isFullScreen = !isFullScreen },
+                                        .then(
+                                            if (isShareFocused) {
+                                                Modifier
+                                                    .border(2.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                            } else {
+                                                Modifier.background(textButtonColor)
+                                            },
+                                        )
+                                        .clickable(
+                                            interactionSource = shareInteractionSource,
+                                            indication = androidx.compose.material3.ripple(bounded = true),
+                                        ) { isFullScreen = !isFullScreen },
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.fullscreen),
                                     contentDescription = null,
-                                    tint = iconButtonColor,
+                                    tint = if (isShareFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     modifier =
                                         Modifier
                                             .align(Alignment.Center)
@@ -1322,8 +1372,19 @@ fun BottomSheetPlayer(
                                     Modifier
                                         .size(40.dp)
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(textButtonColor)
-                                        .clickable {
+                                        .then(
+                                            if (isShareFocused) {
+                                                Modifier
+                                                    .border(2.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                            } else {
+                                                Modifier.background(textButtonColor)
+                                            },
+                                        )
+                                        .clickable(
+                                            interactionSource = shareInteractionSource,
+                                            indication = androidx.compose.material3.ripple(bounded = true),
+                                        ) {
                                             val intent =
                                                 Intent().apply {
                                                     action = Intent.ACTION_SEND
@@ -1339,7 +1400,7 @@ fun BottomSheetPlayer(
                                 Icon(
                                     painter = painterResource(R.drawable.share),
                                     contentDescription = null,
-                                    tint = iconButtonColor,
+                                    tint = if (isShareFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     modifier =
                                         Modifier
                                             .align(Alignment.Center)
@@ -1352,6 +1413,8 @@ fun BottomSheetPlayer(
                     Spacer(modifier = Modifier.size(12.dp))
 
                     AnimatedContent(targetState = showInlineLyrics, label = "LikeButton") { showLyrics ->
+                        val moreLyricsInteractionSource = remember { MutableInteractionSource() }
+                        val isMoreLyricsFocused by moreLyricsInteractionSource.collectIsFocusedAsState()
                         if (showLyrics) {
                             val currentLyrics by playerConnection.currentLyrics.collectAsStateWithLifecycle(initialValue = null)
                             Box(
@@ -1359,8 +1422,19 @@ fun BottomSheetPlayer(
                                     Modifier
                                         .size(40.dp)
                                         .clip(RoundedCornerShape(24.dp))
-                                        .background(textButtonColor)
-                                        .clickable {
+                                        .then(
+                                            if (isMoreLyricsFocused) {
+                                                Modifier
+                                                    .border(2.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                            } else {
+                                                Modifier.background(textButtonColor)
+                                            },
+                                        )
+                                        .clickable(
+                                            interactionSource = moreLyricsInteractionSource,
+                                            indication = androidx.compose.material3.ripple(bounded = true),
+                                        ) {
                                             menuState.show {
                                                 com.metrolist.music.ui.menu.LyricsMenu(
                                                     lyricsProvider = { currentLyrics },
@@ -1381,7 +1455,7 @@ fun BottomSheetPlayer(
                                 Icon(
                                     painter = painterResource(R.drawable.more_horiz),
                                     contentDescription = null,
-                                    tint = iconButtonColor,
+                                    tint = if (isMoreLyricsFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     modifier =
                                         Modifier
                                             .align(Alignment.Center)
@@ -1404,6 +1478,8 @@ fun BottomSheetPlayer(
 
             when (sliderStyle) {
                 SliderStyle.DEFAULT -> {
+                    val sliderInteractionSource = remember { MutableInteractionSource() }
+                    val isSliderFocused by sliderInteractionSource.collectIsFocusedAsState()
                     Slider(
                         value = (sliderPosition ?: effectivePosition).toFloat(),
                         valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
@@ -1427,8 +1503,20 @@ fun BottomSheetPlayer(
                             }
                         },
                         enabled = !isListenTogetherGuest,
+                        interactionSource = sliderInteractionSource,
                         colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
-                        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = PlayerHorizontalPadding)
+                                .then(
+                                    if (isSliderFocused) {
+                                        Modifier
+                                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
                     )
                 }
 
@@ -1483,6 +1571,8 @@ fun BottomSheetPlayer(
                 }
 
                 SliderStyle.SLIM -> {
+                    val sliderInteractionSource = remember { MutableInteractionSource() }
+                    val isSliderFocused by sliderInteractionSource.collectIsFocusedAsState()
                     Slider(
                         value = (sliderPosition ?: effectivePosition).toFloat(),
                         valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
@@ -1506,6 +1596,7 @@ fun BottomSheetPlayer(
                             }
                         },
                         enabled = !isListenTogetherGuest,
+                        interactionSource = sliderInteractionSource,
                         thumb = { Spacer(modifier = Modifier.size(0.dp)) },
                         track = { sliderState ->
                             PlayerSliderTrack(
@@ -1513,7 +1604,18 @@ fun BottomSheetPlayer(
                                 colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
                             )
                         },
-                        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = PlayerHorizontalPadding)
+                                .then(
+                                    if (isSliderFocused) {
+                                        Modifier
+                                            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                                    } else {
+                                        Modifier
+                                    },
+                                ),
                     )
                 }
             }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -365,6 +366,12 @@ private fun NewMiniPlayer(
                 },
     ) {
         val interactionSource = remember { MutableInteractionSource() }
+        val isMiniPlayerFocused by interactionSource.collectIsFocusedAsState()
+        val playPauseInteractionSource = remember { MutableInteractionSource() }
+        val isPlayPauseFocused by playPauseInteractionSource.collectIsFocusedAsState()
+        val skipNextInteractionSource = remember { MutableInteractionSource() }
+        val isSkipNextFocused by skipNextInteractionSource.collectIsFocusedAsState()
+
         Box(
             modifier =
                 Modifier
@@ -373,10 +380,18 @@ private fun NewMiniPlayer(
                     .offset { IntOffset(offsetXAnimatable.value.roundToInt(), 0) }
                     .clip(RoundedCornerShape(20.dp))
                     .background(color = backgroundColor)
-                    .border(
-                        0.75.dp,
-                        if (useDarkTheme) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
-                        RoundedCornerShape(20.dp),
+                    .then(
+                        if (isMiniPlayerFocused) {
+                            Modifier
+                                .border(2.5.dp, primaryColor, RoundedCornerShape(20.dp))
+                                .background(primaryColor.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                        } else {
+                            Modifier.border(
+                                0.75.dp,
+                                if (useDarkTheme) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f),
+                                RoundedCornerShape(20.dp),
+                            )
+                        }
                     )
                     .clickable(
                         interactionSource = interactionSource,
@@ -484,7 +499,18 @@ private fun NewMiniPlayer(
                             playerConnection.togglePlayPause()
                         }
                     },
-                    modifier = Modifier.size(40.dp),
+                    interactionSource = playPauseInteractionSource,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .then(
+                            if (isPlayPauseFocused) {
+                                Modifier
+                                    .border(2.5.dp, primaryColor, CircleShape)
+                                    .background(primaryColor.copy(alpha = 0.25f), CircleShape)
+                            } else {
+                                Modifier
+                            }
+                        ),
                 ) {
                     Icon(
                         painter = painterResource(
@@ -499,7 +525,7 @@ private fun NewMiniPlayer(
                             }
                         ),
                         contentDescription = null,
-                        tint = onSurfaceColor,
+                        tint = if (isPlayPauseFocused) primaryColor else onSurfaceColor,
                         modifier = Modifier.size(26.dp),
                     )
                 }
@@ -510,12 +536,23 @@ private fun NewMiniPlayer(
                 IconButton(
                     enabled = canSkipNext && !isListenTogetherGuest,
                     onClick = if (isListenTogetherGuest) ({}) else ({ playerConnection.seekToNext() }),
-                    modifier = Modifier.size(40.dp),
+                    interactionSource = skipNextInteractionSource,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .then(
+                            if (isSkipNextFocused) {
+                                Modifier
+                                    .border(2.5.dp, primaryColor, CircleShape)
+                                    .background(primaryColor.copy(alpha = 0.25f), CircleShape)
+                            } else {
+                                Modifier
+                            }
+                        ),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.skip_next),
                         contentDescription = null,
-                        tint = onSurfaceColor.copy(alpha = if (canSkipNext && !isListenTogetherGuest) 1f else 0.4f),
+                        tint = if (isSkipNextFocused) primaryColor else onSurfaceColor.copy(alpha = if (canSkipNext && !isListenTogetherGuest) 1f else 0.4f),
                         modifier = Modifier.size(26.dp),
                     )
                 }
@@ -790,6 +827,9 @@ private fun LegacyMiniPlayer(
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
 
     val interactionSource = remember { MutableInteractionSource() }
+    val isMiniPlayerFocused by interactionSource.collectIsFocusedAsState()
+    val skipNextInteractionSource = remember { MutableInteractionSource() }
+    val isSkipNextFocused by skipNextInteractionSource.collectIsFocusedAsState()
 
     Box(
         modifier =
@@ -804,7 +844,17 @@ private fun LegacyMiniPlayer(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainer
                     },
-                ).clickable(
+                )
+                .then(
+                    if (isMiniPlayerFocused) {
+                        Modifier
+                            .border(2.5.dp, primaryColor, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                            .background(primaryColor.copy(alpha = 0.15f), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    } else {
+                        Modifier
+                    }
+                )
+                .clickable(
                     interactionSource = interactionSource,
                     indication = LocalIndication.current,
                     onClick = onClick
@@ -836,7 +886,7 @@ private fun LegacyMiniPlayer(
                                     if (allowLeft || allowRight || canReturnToCenter) {
                                         totalDragDistance += kotlin.math.abs(adjustedDragAmount)
                                         coroutineScope.launch {
-                                            offsetXAnimatable.snapTo(offsetXAnimatable.value + adjustedDragAmount)
+                                             offsetXAnimatable.snapTo(offsetXAnimatable.value + adjustedDragAmount)
                                         }
                                     }
                                 },
@@ -910,8 +960,18 @@ private fun LegacyMiniPlayer(
             IconButton(
                 enabled = canSkipNext && !isListenTogetherGuest,
                 onClick = if (isListenTogetherGuest) ({}) else ({ playerConnection.seekToNext() }),
+                interactionSource = skipNextInteractionSource,
+                modifier = Modifier.then(
+                    if (isSkipNextFocused) {
+                        Modifier
+                            .border(2.5.dp, primaryColor, CircleShape)
+                            .background(primaryColor.copy(alpha = 0.25f), CircleShape)
+                    } else {
+                        Modifier
+                    }
+                ),
             ) {
-                Icon(painter = painterResource(R.drawable.skip_next), contentDescription = null)
+                Icon(painter = painterResource(R.drawable.skip_next), contentDescription = null, tint = if (isSkipNextFocused) primaryColor else LocalContentColor.current)
             }
         }
 
@@ -954,6 +1014,10 @@ private fun LegacyPlayPauseButton(
     val isListenTogetherGuest = listenTogetherManager?.let { it.isInRoom && !it.isHost } ?: false
     val isMuted by playerConnection.isMuted.collectAsStateWithLifecycle()
 
+    val playPauseInteractionSource = remember { MutableInteractionSource() }
+    val isPlayPauseFocused by playPauseInteractionSource.collectIsFocusedAsState()
+    val primaryColor = MaterialTheme.colorScheme.primary
+
     IconButton(
         onClick = {
             if (isListenTogetherGuest) {
@@ -969,6 +1033,16 @@ private fun LegacyPlayPauseButton(
                 playerConnection.togglePlayPause()
             }
         },
+        interactionSource = playPauseInteractionSource,
+        modifier = Modifier.then(
+            if (isPlayPauseFocused) {
+                Modifier
+                    .border(2.5.dp, primaryColor, CircleShape)
+                    .background(primaryColor.copy(alpha = 0.25f), CircleShape)
+            } else {
+                Modifier
+            }
+        ),
     ) {
         Icon(
             painter =

@@ -12,11 +12,18 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
@@ -36,6 +43,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -53,6 +65,9 @@ fun SquigglySlider(
     colors: SliderColors = SliderDefaults.colors(),
     isPlaying: Boolean = true,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusBorderColor = MaterialTheme.colorScheme.primary
     val primaryColor = colors.activeTrackColor
     val inactiveColor = colors.inactiveTrackColor
 
@@ -121,8 +136,40 @@ fun SquigglySlider(
             .fillMaxWidth()
             .height(48.dp)
             .then(
+                if (isFocused) {
+                    Modifier
+                        .border(2.dp, focusBorderColor, RoundedCornerShape(12.dp))
+                        .background(focusBorderColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                }
+            )
+            .then(
                 if (enabled) {
                     Modifier
+                        .focusable(enabled = true, interactionSource = interactionSource)
+                        .onKeyEvent { keyEvent ->
+                            if (keyEvent.type == KeyEventType.KeyDown) {
+                                val step = (duration / 20f).coerceAtLeast(5000f)
+                                when (keyEvent.key) {
+                                    Key.DirectionLeft -> {
+                                        val newVal = (value - step).coerceIn(valueRange.start, valueRange.endInclusive)
+                                        onValueChange(newVal)
+                                        onValueChangeFinished?.invoke()
+                                        true
+                                    }
+                                    Key.DirectionRight -> {
+                                        val newVal = (value + step).coerceIn(valueRange.start, valueRange.endInclusive)
+                                        onValueChange(newVal)
+                                        onValueChangeFinished?.invoke()
+                                        true
+                                    }
+                                    else -> false
+                                }
+                            } else {
+                                false
+                            }
+                        }
                         .pointerInput(valueRange) {
                             detectTapGestures { offset ->
                                 val newPosition = (offset.x / size.width) * duration
