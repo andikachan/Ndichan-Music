@@ -16,6 +16,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
@@ -1650,6 +1651,51 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val player = playerConnection?.player
+        if (player != null) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                    player.play()
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                    player.pause()
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> {
+                    if (player.isPlaying) player.pause() else player.play()
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_CHANNEL_UP -> {
+                    if (player.hasNextMediaItem()) {
+                        player.seekToNext()
+                    }
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_CHANNEL_DOWN -> {
+                    if (player.hasPreviousMediaItem()) {
+                        player.seekToPrevious()
+                    }
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                    player.seekTo(player.currentPosition + 10_000L)
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                    player.seekTo(maxOf(0L, player.currentPosition - 10_000L))
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_STOP -> {
+                    player.stop()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     @SuppressLint("ObsoleteSdkInt")

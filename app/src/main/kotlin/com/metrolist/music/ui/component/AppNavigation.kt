@@ -7,6 +7,7 @@ package com.metrolist.music.ui.component
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -113,6 +114,7 @@ fun AppNavigationRail(
                 }
             }
 
+            val isFocused by interactionSource.collectIsFocusedAsState()
             NavigationRailItem(
                 selected = isSelected,
                 onClick = {
@@ -123,9 +125,9 @@ fun AppNavigationRail(
                 },
                 interactionSource = interactionSource,
                 colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
-                    indicatorColor = Color.Transparent,
+                    indicatorColor = if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.Transparent,
                     selectedIconColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = Color(0xFF8E8E93),
+                    unselectedIconColor = if (isFocused) MaterialTheme.colorScheme.primary else Color(0xFF8E8E93),
                 ),
                 icon = {
                     Icon(
@@ -209,6 +211,7 @@ fun AppNavigationBar(
                 }
             }
 
+            val isFocused by interactionSource.collectIsFocusedAsState()
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
@@ -219,11 +222,11 @@ fun AppNavigationBar(
                 },
                 interactionSource = interactionSource,
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent,
+                    indicatorColor = if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.Transparent,
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = Color(0xFF8E8E93),
-                    unselectedTextColor = Color(0xFF8E8E93),
+                    unselectedIconColor = if (isFocused) MaterialTheme.colorScheme.primary else Color(0xFF8E8E93),
+                    unselectedTextColor = if (isFocused) MaterialTheme.colorScheme.primary else Color(0xFF8E8E93),
                 ),
                 icon = {
                     Icon(
