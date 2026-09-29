@@ -23,6 +23,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -371,13 +372,28 @@ fun Queue(
 
                     Spacer(modifier = Modifier.weight(1f))
 
+                    val moreInteractionSource = remember { MutableInteractionSource() }
+                    val isMoreFocused by moreInteractionSource.collectIsFocusedAsState()
+                    val focusBorderColor = MaterialTheme.colorScheme.primary
+
                     Box(
                         modifier =
                             Modifier
                                 .size(buttonSize)
                                 .clip(CircleShape)
-                                .background(textButtonColor)
-                                .clickable {
+                                .then(
+                                    if (isMoreFocused) {
+                                        Modifier
+                                            .border(2.5.dp, focusBorderColor, CircleShape)
+                                            .background(focusBorderColor.copy(alpha = 0.35f))
+                                    } else {
+                                        Modifier.background(textButtonColor)
+                                    },
+                                )
+                                .clickable(
+                                    interactionSource = moreInteractionSource,
+                                    indication = androidx.compose.material3.ripple(bounded = true),
+                                ) {
                                     menuState.show {
                                         PlayerMenu(
                                             mediaMetadata = mediaMetadata,
@@ -399,7 +415,7 @@ fun Queue(
                             painter = painterResource(id = R.drawable.more_vert),
                             contentDescription = null,
                             modifier = Modifier.size(iconSize),
-                            tint = iconButtonColor,
+                            tint = if (isMoreFocused) focusBorderColor else iconButtonColor,
                         )
                     }
                 }
@@ -1271,15 +1287,30 @@ private fun PlayerQueueButton(
     textBackgroundColor: Color,
     playerBackground: PlayerBackgroundStyle,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusBorderColor = MaterialTheme.colorScheme.primary
+
     val buttonModifier =
         Modifier
             .clip(shape)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(bounded = true),
+                onClick = onClick,
+            )
 
     val alphaFactor = if (enabled) 1f else 0.35f
 
     val appliedModifier =
-        if (isActive) {
+        if (isFocused) {
+            modifier
+                .then(buttonModifier)
+                .border(2.5.dp, focusBorderColor, shape)
+                .background(focusBorderColor.copy(alpha = 0.35f))
+                .alpha(alphaFactor)
+        } else if (isActive) {
             modifier.then(buttonModifier.background(textButtonColor)).alpha(alphaFactor)
         } else {
             modifier
@@ -1299,7 +1330,7 @@ private fun PlayerQueueButton(
         if (text != null) {
             Text(
                 text = text,
-                color = iconButtonColor.copy(alpha = if (enabled) 1f else 0.6f),
+                color = if (isFocused) focusBorderColor else iconButtonColor.copy(alpha = if (enabled) 1f else 0.6f),
                 fontSize = 10.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1311,7 +1342,9 @@ private fun PlayerQueueButton(
             )
         } else {
             val baseTint =
-                if (isActive) {
+                if (isFocused) {
+                    focusBorderColor
+                } else if (isActive) {
                     iconButtonColor
                 } else {
                     when (playerBackground) {

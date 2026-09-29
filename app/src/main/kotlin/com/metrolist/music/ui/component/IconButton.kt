@@ -35,6 +35,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.runtime.getValue
+
 @Composable
 fun ResizableIconButton(
     @DrawableRes icon: Int,
@@ -44,19 +48,36 @@ fun ResizableIconButton(
     indication: Indication? = null,
     onClick: () -> Unit = {},
 ) {
-    Image(
-        painter = painterResource(icon),
-        contentDescription = null,
-        colorFilter = ColorFilter.tint(color),
-        modifier = modifier
-            .clickable(
-                indication = indication ?: ripple(bounded = false),
-                interactionSource = remember { MutableInteractionSource() },
-                enabled = enabled,
-                onClick = onClick,
-            )
-            .alpha(if (enabled) 1f else 0.5f),
-    )
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusBorderColor = MaterialTheme.colorScheme.primary
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .then(
+                    if (isFocused) {
+                        Modifier
+                            .border(2.5.dp, focusBorderColor, CircleShape)
+                            .background(focusBorderColor.copy(alpha = 0.25f), CircleShape)
+                    } else {
+                        Modifier
+                    },
+                ).clickable(
+                    indication = indication ?: ripple(bounded = false),
+                    interactionSource = interactionSource,
+                    enabled = enabled,
+                    onClick = onClick,
+                ).alpha(if (enabled) 1f else 0.5f),
+    ) {
+        Image(
+            painter = painterResource(icon),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(if (isFocused) focusBorderColor else color),
+            modifier = modifier,
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -31,9 +31,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -1133,21 +1135,34 @@ fun BottomSheetPlayer(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         AnimatedContent(targetState = showInlineLyrics, label = "ShareButton") { showLyrics ->
+                            val shareInteractionSource = remember { MutableInteractionSource() }
+                            val isShareFocused by shareInteractionSource.collectIsFocusedAsState()
                             if (showLyrics) {
                                 FilledIconButton(
                                     onClick = { isFullScreen = !isFullScreen },
                                     shape = shareShape,
+                                    interactionSource = shareInteractionSource,
                                     colors =
                                         IconButtonDefaults.filledIconButtonColors(
                                             containerColor = textButtonColor,
                                             contentColor = iconButtonColor,
                                         ),
-                                    modifier = Modifier.size(42.dp),
+                                    modifier =
+                                        Modifier
+                                            .size(42.dp)
+                                            .then(
+                                                if (isShareFocused) {
+                                                    Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, shareShape)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.fullscreen),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
+                                        tint = if (isShareFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     )
                                 }
                             } else {
@@ -1165,23 +1180,36 @@ fun BottomSheetPlayer(
                                         context.startActivity(Intent.createChooser(intent, null))
                                     },
                                     shape = shareShape,
+                                    interactionSource = shareInteractionSource,
                                     colors =
                                         IconButtonDefaults.filledIconButtonColors(
                                             containerColor = textButtonColor,
                                             contentColor = iconButtonColor,
                                         ),
-                                    modifier = Modifier.size(42.dp),
+                                    modifier =
+                                        Modifier
+                                            .size(42.dp)
+                                            .then(
+                                                if (isShareFocused) {
+                                                    Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, shareShape)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.share),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
+                                        tint = if (isShareFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     )
                                 }
                             }
                         }
 
                         AnimatedContent(targetState = showInlineLyrics, label = "LikeButton") { showLyrics ->
+                            val likeInteractionSource = remember { MutableInteractionSource() }
+                            val isLikeFocused by likeInteractionSource.collectIsFocusedAsState()
                             if (showLyrics) {
                                 val currentLyrics by playerConnection.currentLyrics.collectAsStateWithLifecycle(initialValue = null)
                                 FilledIconButton(
@@ -1203,32 +1231,52 @@ fun BottomSheetPlayer(
                                         }
                                     },
                                     shape = favShape,
+                                    interactionSource = likeInteractionSource,
                                     colors =
                                         IconButtonDefaults.filledIconButtonColors(
                                             containerColor = textButtonColor,
                                             contentColor = iconButtonColor,
                                         ),
-                                    modifier = Modifier.size(42.dp),
+                                    modifier =
+                                        Modifier
+                                            .size(42.dp)
+                                            .then(
+                                                if (isLikeFocused) {
+                                                    Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, favShape)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.more_horiz),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
+                                        tint = if (isLikeFocused) MaterialTheme.colorScheme.primary else iconButtonColor,
                                     )
                                 }
                             } else {
-                                // For episodes, show saved state (inLibrary); for songs, show liked state
                                 val isEpisode = currentSong?.song?.isEpisode == true
                                 val isFavorite = if (isEpisode) currentSong?.song?.inLibrary != null else currentSong?.song?.liked == true
                                 FilledIconButton(
                                     onClick = playerConnection::toggleLike,
                                     shape = favShape,
+                                    interactionSource = likeInteractionSource,
                                     colors =
                                         IconButtonDefaults.filledIconButtonColors(
                                             containerColor = textButtonColor,
                                             contentColor = iconButtonColor,
                                         ),
-                                    modifier = Modifier.size(42.dp),
+                                    modifier =
+                                        Modifier
+                                            .size(42.dp)
+                                            .then(
+                                                if (isLikeFocused) {
+                                                    Modifier.border(2.5.dp, MaterialTheme.colorScheme.primary, favShape)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                 ) {
                                     Icon(
                                         painter =
@@ -1241,6 +1289,7 @@ fun BottomSheetPlayer(
                                             ),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
+                                        tint = if (isLikeFocused) MaterialTheme.colorScheme.primary else (if (isFavorite) MaterialTheme.colorScheme.error else iconButtonColor),
                                     )
                                 }
                             }
@@ -1734,13 +1783,27 @@ fun BottomSheetPlayer(
 
                             Spacer(Modifier.width(8.dp))
 
+                            val playPauseInteractionSource = remember { MutableInteractionSource() }
+                            val isPlayPauseFocused by playPauseInteractionSource.collectIsFocusedAsState()
+                            val focusBorderColor = MaterialTheme.colorScheme.primary
+
                             Box(
                                 modifier =
                                     Modifier
                                         .size(72.dp)
                                         .clip(androidx.compose.foundation.shape.CircleShape)
+                                        .then(
+                                            if (isPlayPauseFocused) {
+                                                Modifier.border(3.dp, focusBorderColor, androidx.compose.foundation.shape.CircleShape)
+                                            } else {
+                                                Modifier
+                                            },
+                                        )
                                         .background(textButtonColor)
-                                        .clickable {
+                                        .clickable(
+                                            interactionSource = playPauseInteractionSource,
+                                            indication = androidx.compose.material3.ripple(bounded = true),
+                                        ) {
                                             if (isListenTogetherGuest) {
                                                 playerConnection.toggleMute()
                                                 return@clickable
@@ -1816,6 +1879,96 @@ fun BottomSheetPlayer(
                                 )
                             }
                         }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // TV & Quick Actions Row (Shuffle, Lyrics, Queue, Sleep Timer, More Options)
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = PlayerHorizontalPadding),
+                    ) {
+                        val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsStateWithLifecycle()
+
+                        // Shuffle Button
+                        ResizableIconButton(
+                            icon = R.drawable.shuffle,
+                            color = if (shuffleModeEnabled) MaterialTheme.colorScheme.primary else TextBackgroundColor,
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .padding(4.dp)
+                                    .alpha(if (shuffleModeEnabled) 1f else 0.7f),
+                            enabled = !isListenTogetherGuest,
+                            onClick = {
+                                playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                            },
+                        )
+
+                        // Lyrics Toggle Button
+                        ResizableIconButton(
+                            icon = R.drawable.lyrics,
+                            color = if (showInlineLyrics) MaterialTheme.colorScheme.primary else TextBackgroundColor,
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .padding(4.dp)
+                                    .alpha(if (showInlineLyrics) 1f else 0.7f),
+                            onClick = {
+                                showInlineLyrics = !showInlineLyrics
+                            },
+                        )
+
+                        // Queue Button
+                        ResizableIconButton(
+                            icon = R.drawable.queue_music,
+                            color = TextBackgroundColor,
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .padding(4.dp)
+                                    .alpha(0.7f),
+                            onClick = {
+                                queueSheetState.expandSoft()
+                            },
+                        )
+
+                        // Sleep Timer Button
+                        val sleepTimerEnabled = remember(
+                            playerConnection.service.sleepTimer?.triggerTime,
+                            playerConnection.service.sleepTimer?.pauseWhenSongEnd,
+                        ) {
+                            playerConnection.service.sleepTimer?.isActive ?: false
+                        }
+                        ResizableIconButton(
+                            icon = R.drawable.bedtime,
+                            color = if (sleepTimerEnabled) MaterialTheme.colorScheme.primary else TextBackgroundColor,
+                            modifier =
+                                Modifier
+                                    .size(32.dp)
+                                    .padding(4.dp)
+                                    .alpha(if (sleepTimerEnabled) 1f else 0.7f),
+                            enabled = !isListenTogetherGuest,
+                            onClick = {
+                                if (sleepTimerEnabled) {
+                                    playerConnection.service.sleepTimer?.clear()
+                                } else {
+                                    showSleepTimerDialog = true
+                                }
+                            },
+                        )
+
+                        // More Menu Button
+                        PlayerMoreMenuButton(
+                            mediaMetadata = mediaMetadata,
+                            state = state,
+                            textButtonColor = textButtonColor,
+                            iconButtonColor = iconButtonColor,
+                        )
                     }
                 }
             }
@@ -2136,6 +2289,9 @@ private fun PlayerMoreMenuButton(
     val navController = LocalNavController.current
     val menuState = LocalMenuState.current
     val bottomSheetPageState = LocalBottomSheetPageState.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusBorderColor = MaterialTheme.colorScheme.primary
 
     Box(
         contentAlignment = Alignment.Center,
@@ -2143,8 +2299,19 @@ private fun PlayerMoreMenuButton(
             Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(textButtonColor)
-                .clickable {
+                .then(
+                    if (isFocused) {
+                        Modifier
+                            .border(2.5.dp, focusBorderColor, RoundedCornerShape(24.dp))
+                            .background(focusBorderColor.copy(alpha = 0.35f))
+                    } else {
+                        Modifier.background(textButtonColor)
+                    },
+                )
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = androidx.compose.material3.ripple(bounded = true),
+                ) {
                     menuState.show {
                         PlayerMenu(
                             mediaMetadata = mediaMetadata,
@@ -2164,7 +2331,7 @@ private fun PlayerMoreMenuButton(
         Image(
             painter = painterResource(R.drawable.more_horiz),
             contentDescription = null,
-            colorFilter = ColorFilter.tint(iconButtonColor),
+            colorFilter = ColorFilter.tint(if (isFocused) focusBorderColor else iconButtonColor),
         )
     }
 }
