@@ -193,16 +193,25 @@ object InnerTubeXPlayer {
                 visitorData: String,
                 cookie: String?,
             ): PoTokenResult? =
-                poTokenGenerator.getWebClientPoToken(videoId, visitorData)?.let { token ->
-                    PoTokenResult(
-                        playerRequestToken = token.playerRequestPoToken,
-                        streamingDataToken = token.streamingDataPoToken,
-                        visitorData = visitorData,
-                    )
+                try {
+                    poTokenGenerator.getWebClientPoToken(videoId, visitorData)?.let { token ->
+                        PoTokenResult(
+                            playerRequestToken = token.playerRequestPoToken,
+                            streamingDataToken = token.streamingDataPoToken,
+                            visitorData = visitorData,
+                        )
+                    }
+                } catch (t: Throwable) {
+                    Timber.tag(TAG).w(t, "tokenProvider: Failed to get PoToken, proceeding without PoToken")
+                    null
                 }
 
             override suspend fun close() {
-                poTokenGenerator.close()
+                try {
+                    poTokenGenerator.close()
+                } catch (t: Throwable) {
+                    Timber.tag(TAG).w(t, "tokenProvider: Failed to close PoTokenGenerator")
+                }
             }
         }
 
